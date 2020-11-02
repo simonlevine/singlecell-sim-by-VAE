@@ -2,3 +2,6 @@ pytorch-lightning-bolts
 torch
 torchvision
 pytorch-lightning
+pandas
+scanpy
+toml
