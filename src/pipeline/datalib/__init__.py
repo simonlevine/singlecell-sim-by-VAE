@@ -23,7 +23,7 @@ class SingleCellDataset:
         if self.label_encoder:
             M = self.label_encoder.transform([[cell_type]]).todense()
             cell_type = np.squeeze(np.asarray(M))
-        return gene_expression, cell_type
+        return gene_expression.reshape(-1), cell_type
     
     @property
     def X(self):
