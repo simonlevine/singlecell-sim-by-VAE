@@ -10,3 +10,15 @@ datasplit:
     md5: e070f659f781cac8badda99279787f0b
   - path: data/intermediate/hcl_val_data.h5ad
     md5: ea893e8a42af57b0e4da706ec63ad386
+test_train_val_split:
+  cmd: $VAE_PY src/pipeline/test_train_val_split.py
+  deps:
+  - path: src/pipeline/test_train_val_split.py
+    md5: a12969d53107ae33d1a44bb34dafe400
+  outs:
+  - path: data/intermediate/hcl_test_data.h5ad
+    md5: 31ba589fd7c074a71d1b47bdc2f1fe37
+  - path: data/intermediate/hcl_train_data.h5ad
+    md5: 70da7f4d2eba3b10d750520c585a96de
+  - path: data/intermediate/hcl_val_data.h5ad
+    md5: 083a89588fa1023fd75a67dd24340806

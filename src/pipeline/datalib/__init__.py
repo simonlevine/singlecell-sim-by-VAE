@@ -46,8 +46,8 @@ class SingleCellDataModule(pl.LightningDataModule):
 
     def setup(self, stage=None):
         self.train_dataset = SingleCellDataset(self.train_fp)
-        self.test_dataset = SingleCellDataset(self.train_fp)
-        self.val_dataset = SingleCellDataset(self.train_fp)
+        self.test_dataset = SingleCellDataset(self.test_fp)
+        self.val_dataset = SingleCellDataset(self.val_fp)
         for dataset in [self.train_dataset, self.test_dataset, self.val_dataset]:
             self.genes.update(dataset.genes)
             self.tissues.update(dataset.tissues)
