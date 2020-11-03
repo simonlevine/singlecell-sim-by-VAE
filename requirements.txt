@@ -5,3 +5,8 @@ pytorch-lightning
 pandas
 scanpy
 toml
+dynaconf
+pyarrow
+loguru
+tqdm
+loguru
