@@ -3,7 +3,7 @@
 import anndata
 from tqdm import tqdm
 from loguru import logger
-from paths import RAW_DATA_FP, DATA_SPLIT_FPS
+from pipeline.helpers.paths import RAW_DATA_FP, DATA_SPLIT_FPS
 
 hcl = anndata.read_h5ad(RAW_DATA_FP, backed="r")
 n, _ = hcl.shape

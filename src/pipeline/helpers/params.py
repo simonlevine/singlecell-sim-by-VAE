@@ -1,4 +1,4 @@
-from pipelines.paths import PARAMS_FP
+from pipeline.helpers.paths import PARAMS_FP
 from dynaconf import Dynaconf
 
 params = Dynaconf(

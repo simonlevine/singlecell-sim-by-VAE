@@ -1,9 +1,15 @@
 stages:
-  datasplit:
-    cmd: $VAE_PY src/pipeline/datasplit.py
+  data_split:
+    cmd: $VAE_PY src/pipeline/data_split.py
     deps:
     - src/pipeline/datasplit.py
     outs:
     - data/intermediate/hcl_test_data.h5ad
     - data/intermediate/hcl_train_data.h5ad
     - data/intermediate/hcl_val_data.h5ad
+    train_vae:
+      cmd: $VAE_PY src/pipeline/train_vae.py
+      deps:
+        - data/intermediate/hcl_test_data.h5ad
+        - data/intermediate/hcl_train_data.h5ad
+        - data/intermediate/hcl_val_data.h5ad

@@ -1,3 +1,5 @@
+# 02-712 Project Pipeline Settings
+
 [training]
 batch_size = 32
 

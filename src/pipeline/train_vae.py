@@ -1,11 +1,11 @@
 from typing import List
-import toml
 import torch
 import torch.nn.functional as F
 import pytorch_lightning as pl
 
-from pipeline.vae import Vanilla1dVAE
-from pipeline.data import load_single_cell_data
+from pipeline.helpers.params import params
+from pipeline.trainlib.vae import Vanilla1dVAE
+from pipeline.datalib import load_single_cell_data
 
 
 class LitVae1d(pl.LightningModule):
@@ -44,7 +44,6 @@ class LitVae1d(pl.LightningModule):
 
 if __name__ == "__main__":
     data = load_single_cell_data(batch_size=32)
-    vae = LitVae1d(in_features=data.genes, latent_dim=4)
-    trainer_args = toml.loads("params.toml")["vae_trainer"]
-    trainer = pl.Trainer(**trainer_args)
+    vae = LitVae1d(in_features=len(data.genes), latent_dim=4)
+    trainer = pl.Trainer(**params.training.vae_trainer)
     trainer.fit(vae, data)
