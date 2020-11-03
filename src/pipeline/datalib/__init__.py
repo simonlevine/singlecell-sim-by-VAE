@@ -19,7 +19,7 @@ class SingleCellDataset:
     
     def __getitem__(self, idx):
         gene_expression = self.annotations.X[idx,:]
-        cell_type = self.annotations.obs.tissue[idx].decode()
+        cell_type = self.annotations.obs.tissue[idx]
         if self.label_encoder:
             M = self.label_encoder.transform([[cell_type]]).todense()
             cell_type = np.squeeze(np.asarray(M))
@@ -31,7 +31,7 @@ class SingleCellDataset:
     
     @property
     def y(self):
-        return [tissue.decode() for tissue in self.annotations.obs.tissue.tolist()]
+        return self.annotations.obs.tissue.tolist()
 
 
 class SingleCellDataModule(pl.LightningDataModule):
