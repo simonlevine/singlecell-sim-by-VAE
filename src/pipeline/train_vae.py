@@ -43,7 +43,7 @@ class LitVae1d(pl.LightningModule):
 
 
 if __name__ == "__main__":
-    data = load_single_cell_data(batch_size=32)
+    data = load_single_cell_data(batch_size=params.training.batch_size)
     vae = LitVae1d(in_features=len(data.genes), latent_dim=4)
     trainer = pl.Trainer(**params.training.vae_trainer)
     trainer.fit(vae, data)
