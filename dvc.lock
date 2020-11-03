@@ -1,0 +1,12 @@
+datasplit:
+  cmd: $VAE_PY src/pipeline/datasplit.py
+  deps:
+  - path: src/pipeline/datasplit.py
+    md5: ec7d9c76fdb6dc4f3ea7c7c462872745
+  outs:
+  - path: data/intermediate/hcl_test_data.h5ad
+    md5: 421dc4684023da609f1bd5d91a693df5
+  - path: data/intermediate/hcl_train_data.h5ad
+    md5: e070f659f781cac8badda99279787f0b
+  - path: data/intermediate/hcl_val_data.h5ad
+    md5: ea893e8a42af57b0e4da706ec63ad386
