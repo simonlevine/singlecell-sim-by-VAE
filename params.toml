@@ -8,5 +8,5 @@ batch_size = 32
 
 [training.vae_trainer]
 # See: https://pytorch-lightning.readthedocs.io/en/latest/trainer.html
-max_epochs = 2
+max_epochs = 10
 gpus = 1

@@ -1,37 +1,39 @@
+import itertools as it
 import numpy as np
 import pytorch_lightning as pl
 import scanpy as sc
+import torch
 from sklearn.preprocessing import OneHotEncoder
 from torch.utils.data import DataLoader
 from pipeline.helpers.paths import DATA_SPLIT_FPS
 
 
-class SingleCellDataset:
-    def __init__(self, anndata_fp):
+class SingleCellDataset(torch.utils.data.IterableDataset):
+    def __init__(self, anndata_fp, chunk_size=6000):
         self.annotations = sc.read_h5ad(anndata_fp, backed="r")
         self.genes = [str(gene) for gene in self.annotations.var_names.tolist()]
-        self.tissues = set(self.y)
+        self.tissues = set(self.annotations.obs.tissue.tolist())
         self.label_encoder = None
-        
+        self.chunk_size = chunk_size
+
+    def __iter__(self):
+        return self.lazy_iter_annotations()
+
+    def lazy_iter_annotations(self):
+        for i in it.count():
+            s = slice(i * self.chunk_size, (i + 1) * self.chunk_size)
+            gene_expressions = self.annotations[s, :].X
+            tissues = self.annotations.obs.tissue[s]
+            tissues = np.array(tissues).reshape(1,-1)
+            if self.label_encoder:
+                tissues = self.label_encoder.transform(tissues.T)
+            n_rows, _ = gene_expressions.shape
+            if 0 < n_rows:
+                for i in range(n_rows):
+                    yield gene_expressions[i,:], tissues[i]
+
     def __len__(self):
-        n, _ = self.annotations.shape
-        return n
-    
-    def __getitem__(self, idx):
-        gene_expression = self.annotations.X[idx,:]
-        cell_type = self.annotations.obs.tissue[idx]
-        if self.label_encoder:
-            M = self.label_encoder.transform([[cell_type]]).todense()
-            cell_type = np.squeeze(np.asarray(M))
-        return gene_expression.reshape(-1), cell_type
-    
-    @property
-    def X(self):
-        return self.annotations.X
-    
-    @property
-    def y(self):
-        return self.annotations.obs.tissue.tolist()
+        return len(self.annotations)
 
 
 class SingleCellDataModule(pl.LightningDataModule):
@@ -51,7 +53,7 @@ class SingleCellDataModule(pl.LightningDataModule):
         for dataset in [self.train_dataset, self.test_dataset, self.val_dataset]:
             self.genes.update(dataset.genes)
             self.tissues.update(dataset.tissues)
-        label_encoder = OneHotEncoder()
+        label_encoder = OneHotEncoder(sparse=False)
         label_encoder.fit(np.array(list(self.tissues)).reshape(-1, 1))
         for dataset in [self.train_dataset, self.test_dataset, self.val_dataset]:
             dataset.label_encoder = label_encoder
