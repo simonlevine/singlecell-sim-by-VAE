@@ -29,7 +29,7 @@ class LitVae1d(pl.LightningModule):
 
     def _step(self, batch, batch_idx):
         x, _ = batch
-        x_reconstructed, _, _, _  = self.forward(batch)
+        x_reconstructed, _, _, _  = self.forward(x)
         reconstruction_loss = F.mse_loss(x_reconstructed, x)
         return reconstruction_loss
 
