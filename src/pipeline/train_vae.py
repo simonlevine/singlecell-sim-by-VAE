@@ -31,7 +31,9 @@ def train_vae_prime(x, dx=1, **kwargs):
         x (int): number of latent dimensions
         dx (int): delta (number of latent dimensions)
     """
-    return (train_vae(x + dx, **kwargs) - train_vae(x - dx, **kwargs)) / 2*dx
+    _, a = train_vae(x + dx, **kwargs)
+    _, b = train_vae(x - dx, **kwargs)
+    return (a-b) / (2*dx)
 
 
 def train_vae(n_latent_dimensions, data, batch_size, model_path=None):
@@ -44,11 +46,12 @@ def train_vae(n_latent_dimensions, data, batch_size, model_path=None):
 
     Returns (float): log-likelihood
     """
-    n_latent_dimensions = int(n_latent_dimensions)
-    M_N = batch_size / len(data.train_dataset.annotations)
+    logger.info("training with {n_latent_dimensions} latent dimensions")
+    M_N = batch_size / len(data.train_dataset)
     vae = LitVae1d(in_features=len(data.genes), latent_dim=n_latent_dimensions, M_N=M_N)
     trainer = pl.Trainer(**params.training.vae_trainer)
     trainer.fit(vae, data)
+    logger.info("done.")
     if model_path:
         vae.to_onnx(
             model_path,

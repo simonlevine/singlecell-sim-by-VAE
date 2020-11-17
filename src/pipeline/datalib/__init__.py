@@ -32,6 +32,9 @@ class SingleCellDataset(torch.utils.data.IterableDataset):
                 for i in range(n_rows):
                     yield gene_expressions[i,:], tissues[i]
 
+    def __len__(self):
+        return len(self.annotations)
+
 
 class SingleCellDataModule(pl.LightningDataModule):
     def __init__(self, train_fp, test_fp, val_fp, batch_size):
