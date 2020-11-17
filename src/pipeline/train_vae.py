@@ -4,11 +4,10 @@ warnings.simplefilter(action="ignore", category=UserWarning)
 from typing import Optional, List
 import scipy
 import torch
-import torch.nn.functional as F
 import pytorch_lightning as pl
+from pytorch_lightning.loggers import WandbLogger
 from loguru import logger
 
-from pipeline.trainlib.lll import LoguruLightningLogger
 from pipeline.trainlib.vae import Vanilla1dVAE
 from pipeline.datalib import load_single_cell_data
 from pipeline.helpers.params import params
@@ -49,15 +48,15 @@ def train_vae(n_latent_dimensions, data, batch_size, model_path=None):
     Returns (float): log-likelihood
     """
     n_latent_dimensions = int(n_latent_dimensions)
-    logger.info(f"training with {n_latent_dimensions} latent dimensions")
     M_N = batch_size / len(data.train_dataset)
     vae = LitVae1d(in_features=len(data.genes), latent_dim=n_latent_dimensions, M_N=M_N)
+    wandb_logger = WandbLogger(name=f"vae-{n_latent_dimensions}-latent-dims", project='02718-vae')
     trainer = pl.Trainer(
         callbacks=[pl.callbacks.ModelCheckpoint(
             dirpath=INTERMEDIATE_DATA_DIR,
             monitor="val_loss",
         )],
-        logger=LoguruLightningLogger(),
+        logger=wandb_logger,
         **params.training.vae_trainer,
     )
     trainer.fit(vae, data)
