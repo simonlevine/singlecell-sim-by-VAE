@@ -54,7 +54,7 @@ def train_vae(n_latent_dimensions, data, batch_size, model_path=None):
     trainer = pl.Trainer(
         callbacks=[pl.callbacks.ModelCheckpoint(
             dirpath=INTERMEDIATE_DATA_DIR,
-            monitor='val_loss',
+            monitor="val_loss",
         )],
         **params.training.vae_trainer,
     )
@@ -88,22 +88,19 @@ class LitVae1d(pl.LightningModule):
 
     def forward(self, x):
         return self.vae.forward(x)
-
-    def _step(self, batch, batch_idx):
+        
+    def training_step(self, batch, batch_idx):
         x, _ = batch
         x_reconstructed, _, mu, log_var  = self.forward(x)
-        return self.vae.loss_function(x_reconstructed, x, mu, log_var, M_N=self.M_N)
-
-    def training_step(self, batch, batch_idx):
-        return self._step(batch, batch_idx)
+        loss = self.vae.loss_function(x_reconstructed, x, mu, log_var, M_N=self.M_N)["loss"]
+        return loss
     
     def validation_step(self, batch, batch_idx):
         x, _ = batch
-        loss = self._step(batch, batch_idx)
-        mu, log_var = self.vae.encode(x)
-        self.log("val_loss", loss)
-        return {"loss": loss,
-                "mu^2": torch.pow(mu.sum(axis=0), 2),
+        x_reconstructed, _, mu, log_var  = self.forward(x)
+        loss = self.vae.loss_function(x_reconstructed, x, mu, log_var, M_N=self.M_N)["loss"]
+        self.log("val_loss", loss, )
+        return {"mu^2": torch.pow(mu.sum(axis=0), 2),
                 "n": x.shape[0]}
 
     def validation_epoch_end(self, validation_step_outputs):
