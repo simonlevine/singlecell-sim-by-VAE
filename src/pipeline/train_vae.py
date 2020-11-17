@@ -17,11 +17,21 @@ from pipeline.helpers.paths import MODEL_WEIGHTS_ONNX_FP
 def main():
     """use Newton-Raphson to determine the latent dimensions, retrain using the best one"""
     data = load_single_cell_data(batch_size=params.training.batch_size)
-    f = lambda x_0: train_vae(x_0, data=data, batch_size=params.training.batch_size)
+    f = lambda x_0: train_vae_prime(x_0, data=data, batch_size=params.training.batch_size)
     latent_dims_best \
         = scipy.optimize.newton(f, params.training.latent_dimensions_initial_guess)
     logger.info("found {latent_dims_best} as best latent dimensionality")
     train_vae(latent_dims_best, data, params.training.batch_size, MODEL_WEIGHTS_ONNX_FP)
+
+
+def train_vae_prime(x, dx=1, **kwargs):
+    """Taylor approximation of derivative of VAE w.r.t number of latent dimensions
+
+    Args:
+        x (int): number of latent dimensions
+        dx (int): delta (number of latent dimensions)
+    """
+    return (train_vae(x + dx, **kwargs) - train_vae(x - dx, **kwargs)) / 2*dx
 
 
 def train_vae(n_latent_dimensions, data, batch_size, model_path=None):
@@ -45,8 +55,8 @@ def train_vae(n_latent_dimensions, data, batch_size, model_path=None):
             torch.randn((batch_size, len(data.genes))),
             export_params=True
         )
-    log_likelihood = trainer.callback_metrics["log_likelihood"]
-    return log_likelihood
+    log_likelihood = trainer.callback_metrics["log_likelihood"].item()
+    return vae, log_likelihood
 
 
 class LitVae1d(pl.LightningModule):
@@ -81,12 +91,12 @@ class LitVae1d(pl.LightningModule):
         loss = self._step(batch, batch_idx)
         mu, log_var = self.vae.encode(x)
         return {"loss": loss,
-                "log_likelihood": torch.pow(mu.sum(axis=0), 2),
+                "mu^2": torch.pow(mu.sum(axis=0), 2),
                 "n": x.shape[0]}
 
     def validation_epoch_end(self, validation_step_outputs):
         n = sum([x["n"] for x in validation_step_outputs])
-        log_likelihood = - 0.5*n*1.83 - 0.5*torch.stack([x["log_likelihood"] for x in validation_step_outputs]).sum()
+        log_likelihood = - 0.5*n*1.83 - 0.5*torch.stack([x["mu^2"] for x in validation_step_outputs]).sum()
         self.log("log_likelihood", log_likelihood)
 
     def configure_optimizers(self):
