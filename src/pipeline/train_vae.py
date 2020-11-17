@@ -45,7 +45,7 @@ def train_vae(n_latent_dimensions, data, batch_size, model_path=None):
     Returns (float): log-likelihood
     """
     n_latent_dimensions = int(n_latent_dimensions)
-    M_N = batch_size / len(data.train_dataset)
+    M_N = batch_size / len(data.train_dataset.annotations)
     vae = LitVae1d(in_features=len(data.genes), latent_dim=n_latent_dimensions, M_N=M_N)
     trainer = pl.Trainer(**params.training.vae_trainer)
     trainer.fit(vae, data)
