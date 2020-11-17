@@ -8,6 +8,7 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 from loguru import logger
 
+from pipeline.trainlib.lll import LoguruLightningLogger
 from pipeline.trainlib.vae import Vanilla1dVAE
 from pipeline.datalib import load_single_cell_data
 from pipeline.helpers.params import params
@@ -56,6 +57,7 @@ def train_vae(n_latent_dimensions, data, batch_size, model_path=None):
             dirpath=INTERMEDIATE_DATA_DIR,
             monitor="val_loss",
         )],
+        logger=LoguruLightningLogger(),
         **params.training.vae_trainer,
     )
     trainer.fit(vae, data)
@@ -99,7 +101,7 @@ class LitVae1d(pl.LightningModule):
         x, _ = batch
         x_reconstructed, _, mu, log_var  = self.forward(x)
         loss = self.vae.loss_function(x_reconstructed, x, mu, log_var, M_N=self.M_N)["loss"]
-        self.log("val_loss", loss, )
+        self.log("val_loss", loss, prog_bar=True)
         return {"mu^2": torch.pow(mu.sum(axis=0), 2),
                 "n": x.shape[0]}
 
