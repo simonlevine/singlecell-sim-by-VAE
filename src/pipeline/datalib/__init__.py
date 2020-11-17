@@ -23,12 +23,12 @@ class SingleCellDataset(torch.utils.data.IterableDataset):
         for i in it.count():
             s = slice(i * self.chunk_size, (i + 1) * self.chunk_size)
             gene_expressions = self.annotations[s, :].X
-            tissues = self.annotations.obs.tissue[s]
-            tissues = np.array(tissues).reshape(1,-1)
-            if self.label_encoder:
-                tissues = self.label_encoder.transform(tissues.T)
             n_rows, _ = gene_expressions.shape
             if 0 < n_rows:
+                tissues = self.annotations.obs.tissue[s]
+                tissues = np.array(tissues).reshape(1,-1)
+                if self.label_encoder:
+                    tissues = self.label_encoder.transform(tissues.T)
                 for i in range(n_rows):
                     yield gene_expressions[i,:], tissues[i]
 

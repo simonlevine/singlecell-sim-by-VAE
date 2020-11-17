@@ -1,12 +1,10 @@
 # 02-712 Project Pipeline Settings
 
-[model]
-latent_dimensions = 32
-
 [training]
+latent_dimensions_initial_guess = 32
 batch_size = 32
 
 [training.vae_trainer]
 # See: https://pytorch-lightning.readthedocs.io/en/latest/trainer.html
-max_epochs = 10
-gpus = 1
+max_epochs = 1
+gpus = 0
