@@ -11,11 +11,12 @@ from loguru import logger
 from pipeline.trainlib.vae import Vanilla1dVAE
 from pipeline.datalib import load_single_cell_data
 from pipeline.helpers.params import params
-from pipeline.helpers.paths import MODEL_WEIGHTS_ONNX_FP
+from pipeline.helpers.paths import MODEL_WEIGHTS_ONNX_FP, INTERMEDIATE_DATA_DIR
 
 
 def main():
     """use Newton-Raphson to determine the latent dimensions, retrain using the best one"""
+    pl.seed_everything(42)
     data = load_single_cell_data(batch_size=params.training.batch_size)
     f = lambda x_0: train_vae_prime(x_0, data=data, batch_size=params.training.batch_size)
     latent_dims_best \
@@ -50,7 +51,13 @@ def train_vae(n_latent_dimensions, data, batch_size, model_path=None):
     logger.info(f"training with {n_latent_dimensions} latent dimensions")
     M_N = batch_size / len(data.train_dataset)
     vae = LitVae1d(in_features=len(data.genes), latent_dim=n_latent_dimensions, M_N=M_N)
-    trainer = pl.Trainer(**params.training.vae_trainer)
+    trainer = pl.Trainer(
+        callbacks=[pl.callbacks.ModelCheckpoint(
+            dirpath=INTERMEDIATE_DATA_DIR,
+            monitor='val_loss',
+        )],
+        **params.training.vae_trainer,
+    )
     trainer.fit(vae, data)
     logger.info("done.")
     if model_path:
@@ -94,6 +101,7 @@ class LitVae1d(pl.LightningModule):
         x, _ = batch
         loss = self._step(batch, batch_idx)
         mu, log_var = self.vae.encode(x)
+        self.log("val_loss", loss)
         return {"loss": loss,
                 "mu^2": torch.pow(mu.sum(axis=0), 2),
                 "n": x.shape[0]}
