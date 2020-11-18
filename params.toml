@@ -2,9 +2,9 @@
 
 [training]
 latent_dimensions_initial_guess = 32
-batch_size = 32
+batch_size = 256
 
 [training.vae_trainer]
 # See: https://pytorch-lightning.readthedocs.io/en/latest/trainer.html
 max_epochs = 1
-gpus = 0
+gpus = 1
