@@ -49,12 +49,15 @@ def tune_vae(x_0, dx=1, n_iterations=10, temperature=100, **kwargs):
         f_prime_prime = (a+b-(2*c)) / (dx**2)
         x = x - (temperature * f_prime / f_prime_prime)
     return x
+
+def train_vae(n_latent_dimensions, data, batch_size, model_path=None, max_epochs=None):
     """train the VAE with a specific number of dimensions
 
     Args:
         n_latent_dimensions (int): number of latent dimensions
         data (pl.DataModule): HCL data
         model_path (Optional[Pathlike]): where to save ONNX serialization, if specified
+        max_epochs (Optional[int]): number of epochs, overwriting the default in params.toml
 
     Returns (float): log-likelihood
     """
@@ -62,13 +65,16 @@ def tune_vae(x_0, dx=1, n_iterations=10, temperature=100, **kwargs):
     M_N = batch_size / len(data.train_dataset)
     vae = LitVae1d(in_features=len(data.genes), latent_dim=n_latent_dimensions, M_N=M_N)
     wandb_logger = WandbLogger(name=f"vae-{n_latent_dimensions}-latent-dims", project='02718-vae')
+    train_opts = params.training.vae_trainer
+    if max_epochs:
+        train_opts["max_epochs"] = max_epochs
     trainer = pl.Trainer(
         callbacks=[pl.callbacks.ModelCheckpoint(
             dirpath=INTERMEDIATE_DATA_DIR,
             monitor="val_loss",
         )],
         logger=wandb_logger,
-        **params.training.vae_trainer,
+        **train_opts,
     )
     trainer.fit(vae, data)
     logger.info("done.")
