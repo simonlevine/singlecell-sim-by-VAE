@@ -37,6 +37,7 @@ class SingleCellDataset(torch.utils.data.IterableDataset):
                 for i in range(n_rows):
                     yield gene_expressions[i,:], tissues[i]
 
+
     def __len__(self):
         return len(self.annotations)
 
@@ -66,11 +67,11 @@ class SingleCellDataModule(pl.LightningDataModule):
     def train_dataloader(self):
         return DataLoader(self.train_dataset, batch_size=self.batch_size)
 
-    # def val_dataloader(self):
-    #     return DataLoader(self.val_dataset, batch_size=self.batch_size)
+    def val_dataloader(self):
+        return DataLoader(self.val_dataset, batch_size=self.batch_size)
 
-    # def test_dataloader(self):
-    #     return DataLoader(self.test_dataset, batch_size=self.batch_size)
+    def test_dataloader(self):
+        return DataLoader(self.test_dataset, batch_size=self.batch_size)
 
 
 def load_single_cell_data(batch_size=32):
