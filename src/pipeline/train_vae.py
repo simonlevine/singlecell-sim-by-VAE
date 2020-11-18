@@ -39,13 +39,20 @@ def tune_vae(x_0, dx=1, n_iterations=10, temperature=100, **kwargs):
     # for each latent dimension, store the log-likelihood
     # after running `train_vae` and return cached value
     # if requested again
-    cache = defaultdict(lambda x: train_vae(x, **kwargs)[1])
+    cache = {}
+    def run_and_cache(x):
+        if x in cache:
+            return cache[x]
+        _, log_likelihood = train_vae(x, **kwargs)
+        cache[x] = log_likelihood
+        return log_likelihood
     x = x_0
     for _ in range(n_iterations):
-        a = cache[x+dx]
-        b = cache[x-dx]
-        c = cache[x]
+        a = run_and_cache(x+dx)
+        b = run_and_cache(x-dx)
+        c = run_and_cache(x)
         f_prime = (a-b) / (2*dx)
+        f_prime_prime = (a+b-2*c) / (dx**2)
         x = x - (temperature * f_prime / f_prime_prime)
         x = int(x)
     return x
