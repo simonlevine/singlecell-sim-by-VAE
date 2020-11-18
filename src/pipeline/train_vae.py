@@ -107,7 +107,7 @@ class LitVae1d(pl.LightningModule):
     def validation_epoch_end(self, validation_step_outputs):
         n = sum([x["n"] for x in validation_step_outputs])
         log_likelihood = - 0.5*n*1.83 - 0.5*torch.stack([x["mu^2"] for x in validation_step_outputs]).sum()
-        self.log("log_likelihood", log_likelihood)
+        return {"log_likelihood": log_likelihood}
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.vae.parameters())
