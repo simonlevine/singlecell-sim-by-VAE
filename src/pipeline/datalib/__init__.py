@@ -21,7 +21,12 @@ class SingleCellDataset(torch.utils.data.IterableDataset):
 
     def lazy_iter_annotations(self):
         for i in it.count():
-            s = slice(i * self.chunk_size, (i + 1) * self.chunk_size)
+            if len(self) < i * self.chunk_size:
+                break
+            s = slice(
+                i * self.chunk_size,
+                min([((i + 1) * self.chunk_size), len(self)])
+            )
             gene_expressions = self.annotations[s, :].X
             n_rows, _ = gene_expressions.shape
             if 0 < n_rows:
@@ -61,11 +66,11 @@ class SingleCellDataModule(pl.LightningDataModule):
     def train_dataloader(self):
         return DataLoader(self.train_dataset, batch_size=self.batch_size)
 
-    def val_dataloader(self):
-        return DataLoader(self.val_dataset, batch_size=self.batch_size)
+    # def val_dataloader(self):
+    #     return DataLoader(self.val_dataset, batch_size=self.batch_size)
 
-    def test_dataloader(self):
-        return DataLoader(self.test_dataset, batch_size=self.batch_size)
+    # def test_dataloader(self):
+    #     return DataLoader(self.test_dataset, batch_size=self.batch_size)
 
 
 def load_single_cell_data(batch_size=32):
