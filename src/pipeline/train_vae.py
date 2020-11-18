@@ -1,6 +1,9 @@
 import warnings
+# ignore AnnDatas use of categorical
 warnings.simplefilter(action="ignore", category=FutureWarning)
+# ignore single threaded dataloader warning; AnnData  is single threaded
 warnings.simplefilter(action="ignore", category=UserWarning)
+from collections import defaultdict
 from typing import Optional, List
 import scipy
 import torch
