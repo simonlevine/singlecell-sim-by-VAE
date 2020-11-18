@@ -46,8 +46,8 @@ def tune_vae(x_0, dx=1, n_iterations=10, temperature=100, **kwargs):
         b = cache[x-dx]
         c = cache[x]
         f_prime = (a-b) / (2*dx)
-        f_prime_prime = (a+b-(2*c)) / (dx**2)
         x = x - (temperature * f_prime / f_prime_prime)
+        x = int(x)
     return x
 
 def train_vae(n_latent_dimensions, data, batch_size, model_path=None, max_epochs=None):
