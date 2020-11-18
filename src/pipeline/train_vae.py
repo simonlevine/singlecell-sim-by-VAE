@@ -5,7 +5,6 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=UserWarning)
 from collections import defaultdict
 from typing import Optional, List
-import scipy
 import torch
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
@@ -21,26 +20,35 @@ def main():
     """use Newton-Raphson to determine the latent dimensions, retrain using the best one"""
     pl.seed_everything(42)
     data = load_single_cell_data(batch_size=params.training.batch_size)
-    f = lambda x_0: train_vae_prime(x_0, data=data, batch_size=params.training.batch_size)
-    latent_dims_best \
-        = scipy.optimize.newton(f, params.training.latent_dimensions_initial_guess)
-    logger.info("found {latent_dims_best} as best latent dimensionality")
+    latent_dims_best = tune_vae(32, data=data, batch_size=params.training.batch_size)
     train_vae(latent_dims_best, data, params.training.batch_size, MODEL_WEIGHTS_ONNX_FP)
 
 
-def train_vae_prime(x, dx=1, **kwargs):
-    """Taylor approximation of derivative of VAE w.r.t number of latent dimensions
+def tune_vae(x_0, dx=1, n_iterations=10, temperature=100, **kwargs):
+    """Tune number of latent dimensions using Newtons method and 
+    Taylor approximation of derivative of VAE w.r.t number of
+    latent dimensions
 
     Args:
-        x (int): number of latent dimensions
+        x_0 (int): number of latent dimensions, initial guess
         dx (int): delta (number of latent dimensions)
+        n_iterations (int): number of newton iterations
+
+    Returns: tuned number of latent dimensions
     """
-    _, a = train_vae(x + dx, **kwargs)
-    _, b = train_vae(x - dx, **kwargs)
-    return (a-b) / (2*dx)
-
-
-def train_vae(n_latent_dimensions, data, batch_size, model_path=None):
+    # for each latent dimension, store the log-likelihood
+    # after running `train_vae` and return cached value
+    # if requested again
+    cache = defaultdict(lambda x: train_vae(x, **kwargs)[1])
+    x = x_0
+    for _ in range(n_iterations):
+        a = cache[x+dx]
+        b = cache[x-dx]
+        c = cache[x]
+        f_prime = (a-b) / (2*dx)
+        f_prime_prime = (a+b-(2*c)) / (dx**2)
+        x = x - (temperature * f_prime / f_prime_prime)
+    return x
     """train the VAE with a specific number of dimensions
 
     Args:
