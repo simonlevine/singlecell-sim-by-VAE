@@ -1,9 +1,24 @@
 stages:
-  datasplit:
-    cmd: $VAE_PY src/pipeline/datasplit.py
+  test_train_val_split:
+    cmd: $VAE_PY src/pipeline/test_train_val_split.py
     deps:
-    - src/pipeline/datasplit.py
+    - data/raw/HCL_final_USE.h5ad
+    - src/pipeline/test_train_val_split.py
     outs:
     - data/intermediate/hcl_test_data.h5ad
     - data/intermediate/hcl_train_data.h5ad
     - data/intermediate/hcl_val_data.h5ad
+  train_vae:
+    cmd: $VAE_PY src/pipeline/train_vae.py
+    params:
+    - params.toml:
+      - model.latent_dimensions
+      - training.batch_size
+      - training.vae_trainer.max_epochs
+      - training.vae_trainer.gpus
+    deps:
+    - data/intermediate/hcl_test_data.h5ad
+    - data/intermediate/hcl_train_data.h5ad
+    - data/intermediate/hcl_val_data.h5ad
+    outs:
+    - data/artifacts/vae.onnx
