@@ -16,7 +16,7 @@ def main():
 
     filtered = filter(adata)
     # normed = log_normalize(filtered)
-    normed.write_h5ad(PREPROC_DATA_FP, compression="gzip")
+    filtered.write_h5ad(PREPROC_DATA_FP, compression="gzip")
  
 
 def filter(adata):
