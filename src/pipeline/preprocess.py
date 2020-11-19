@@ -10,7 +10,7 @@ from helpers.paths import RAW_DATA_FP, DATA_SPLIT_FPS,PREPROC_DATA_FP
 def main():
     plot = False
 
-    adata = anndata.read_h5ad(RAW_DATA_FP, backed="r")
+    adata = sc.read(RAW_DATA_FP, backed="r")
 
     if plot == True:
         sc.pl.highest_expr_genes(adata, n_top=20, show=False).savefig('10_highest_expressed.png')
