@@ -124,8 +124,8 @@ class LitVae1d(pl.LightningModule):
         x, _ = batch
         x_reconstructed, _, mu, log_var  = self.forward(x)
         loss = self.vae.loss_function(x_reconstructed, x, mu, log_var, M_N=self.M_N)["loss"]
-        self.log("val_loss", loss, prog_bar=True)
-        return {"mu^2": torch.pow(mu.sum(axis=0), 2),
+        return {"val_loss": loss,
+                "mu^2": torch.pow(mu.sum(axis=0), 2),
                 "n": x.shape[0]}
 
     def validation_epoch_end(self, validation_step_outputs):
