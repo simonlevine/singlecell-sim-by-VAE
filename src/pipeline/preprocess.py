@@ -11,8 +11,8 @@ def main():
 
     adata = sc.read(RAW_DATA_FP, backed="r")
 
-    if plot == True:
-        sc.pl.highest_expr_genes(adata, n_top=20, show=False).savefig('10_highest_expressed.png')
+    # if plot == True:
+    #     sc.pl.highest_expr_genes(adata, n_top=20, show=False).savefig('10_highest_expressed.png')
 
     filtered = filter(adata)
     # normed = log_normalize(filtered)
