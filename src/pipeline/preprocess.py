@@ -5,7 +5,7 @@ import scanpy as sc
 import anndata
 from tqdm import tqdm
 from loguru import logger
-from pipeline.helpers.paths import RAW_DATA_FP, DATA_SPLIT_FPS,PREPROC_DATA_FP
+from helpers.paths import RAW_DATA_FP, DATA_SPLIT_FPS,PREPROC_DATA_FP
 
 def main():
     plot = False
