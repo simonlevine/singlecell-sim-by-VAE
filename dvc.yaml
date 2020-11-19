@@ -4,6 +4,7 @@ stages:
     deps:
     - data/raw/HCL_final_USE.h5ad
     - src/pipeline/preprocess.py
+
     outs:
     - data/intermediate/HCL_final_USE_preprocessed.h5ad
 
@@ -28,5 +29,6 @@ stages:
     - data/intermediate/hcl_test_data.h5ad
     - data/intermediate/hcl_train_data.h5ad
     - data/intermediate/hcl_val_data.h5ad
+
     outs:
     - data/artifacts/vae.onnx

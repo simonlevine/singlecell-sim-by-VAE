@@ -8,6 +8,7 @@ from pipeline.helpers.paths import PREPROC_DATA_FP, DATA_SPLIT_FPS
 logger.info("Please note this process takes about 10 minutes")
 
 hcl = anndata.read_h5ad(PREPROC_DATA_FP, backed="r")
+
 n, _ = hcl.shape
 split_idx_1 = int(n * 0.8)
 split_idx_2 = int(n * 0.9)
@@ -23,3 +24,4 @@ for split_type, i, j, outfp in tqdm(splits, unit="split"):
     split.write_h5ad(outfp, compression="gzip")
     # bug workaround: after writing, we need to refresh the view
     hcl = anndata.read_h5ad(PREPROC_DATA_FP, backed="r")
+
