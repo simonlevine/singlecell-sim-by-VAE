@@ -1,8 +1,9 @@
 from typing import List
-import models as vae_models
 import torch
 from torch import nn
 
+# PyTorch-VAE
+import pytorch_vae.models as vae_models
 
 class Vanilla1dVAE(vae_models.VanillaVAE):
 
