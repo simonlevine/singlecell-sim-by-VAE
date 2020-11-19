@@ -1,8 +1,16 @@
 stages:
+  preprocess_raw_data:
+    cmd: $VAE_PY src/pipeline/preprocess.py
+    deps:
+    - data/raw/HCL_final_USE.h5ad
+    - src/pipeline/preprocess.py
+    outs:
+    - data/intermediate/HCL_final_USE_preprocessed.h5ad
+
   test_train_val_split:
     cmd: $VAE_PY src/pipeline/test_train_val_split.py
     deps:
-    - data/raw/HCL_final_USE.h5ad
+    - data/intermediate/HCL_final_USE_preprocessed.h5ad
     - src/pipeline/test_train_val_split.py
     outs:
     - data/intermediate/hcl_test_data.h5ad
