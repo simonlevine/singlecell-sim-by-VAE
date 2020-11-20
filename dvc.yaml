@@ -6,12 +6,12 @@ stages:
     - src/pipeline/preprocess.py
 
     outs:
-    - data/intermediate/HCL_final_USE_preprocessed.h5ad
+    - data/intermediate/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection.h5ad
 
   test_train_val_split:
     cmd: $VAE_PY src/pipeline/test_train_val_split.py
     deps:
-    - data/intermediate/HCL_final_USE_preprocessed.h5ad
+    - data/intermediate/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection.h5ad
     - src/pipeline/test_train_val_split.py
     outs:
     - data/intermediate/hcl_test_data.h5ad
