@@ -9,14 +9,16 @@ from helpers.paths import RAW_DATA_FP, DATA_SPLIT_FPS,PREPROC_DATA_FP
 
 def main():
 
-    adata = sc.read(RAW_DATA_FP, backed="r")
+    adata = sc.read(RAW_DATA_FP, backed="r",
+    backup_url='https://hosted-matrices-prod.s3-us-west-2.amazonaws.com/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection-25/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection.h5ad')
 
+    # adata = anndata.read_h5ad(RAW_DATA_FP, backed="r")
     # if plot == True:
     #     sc.pl.highest_expr_genes(adata, n_top=20, show=False).savefig('10_highest_expressed.png')
 
     filtered = filter(adata)
     normed = log_normalize(filtered)
-    filtered.write_h5ad(PREPROC_DATA_FP, compression="gzip")
+    normed.write_h5ad(PREPROC_DATA_FP, compression="gzip")
  
 
 def filter(adata):
