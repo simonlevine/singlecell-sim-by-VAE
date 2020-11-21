@@ -23,13 +23,13 @@ def main():
 def filter(adata):
     logger.info(f'Filtering out datapoints based on number of genes and minimal presence...')
     logger.info('Setting lower bound on min number of genes to 200...')
-    sc.pp.filter_cells(adata, min_genes=200)
+    sc.pp.filter_cells(adata, min_genes=200) #takes awhile
 
     logger.info('Setting lower bound on min number of cells with genes to 5...')
-    sc.pp.filter_genes(adata, min_cells=5)
+    sc.pp.filter_genes(adata, min_cells=5) #takes awhile
 
-    logger.info(f'Filtering out genes with counts < 2000...')
-    adata = adata[adata.obs.n_counts > 2000, :]
+    # logger.info(f'Filtering out genes with counts < 2000...')
+    # adata = adata[adata.obs.n_counts > 2000, :]
     logger.info(f'Filtering out mitochondrial noise at 5% threshold...')
     adata = adata[adata.obs.percent_counts_mt < 5, :]
 
@@ -42,9 +42,9 @@ def log_normalize(adata):
     logger.info('Identified highly variate genes. Filtering out...')
     adata = adata[:, adata.var.highly_variable]
     logger.info('Regressing out effects of percentage of mitochondrial genes expressed')
-    sc.pp.regress_out(adata, ['percent_mt'])
+    sc.pp.regress_out(adata, ['total_counts','percent_mt'])
     logger.info('Scaling the data to unit variance, excluding values exceeding standard dev of 10.')
-    sc.pp.scale(adata)
+    sc.pp.scale(adata,max_value=10)
 
     return adata
 
