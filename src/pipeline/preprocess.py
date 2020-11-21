@@ -13,6 +13,7 @@ def main():
     backup_url='https://hosted-matrices-prod.s3-us-west-2.amazonaws.com/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection-25/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection.h5ad')
 
     logger.info('Computing QC metrics for ingested data...')
+    sc.pp.calculate_qc_metrics(adata, inplace=True)
     filtered = filter(adata)
 
     normed = log_normalize(filtered)
