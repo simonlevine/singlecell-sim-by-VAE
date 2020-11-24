@@ -1,20 +1,13 @@
 stages:
-  preprocess_raw_data:
-    cmd: $VAE_PY src/pipeline/preprocess.py
-    deps:
-    - data/raw/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection.h5ad
-    - src/pipeline/preprocess.py
-    outs:
-    - data/intermediate/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection_preprocessed.h5ad
   test_train_val_split:
     cmd: $VAE_PY src/pipeline/test_train_val_split.py
     deps:
-    - data/intermediate/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection_preprocessed.h5ad
+    - data/intermediate/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection.h5ad
     - src/pipeline/test_train_val_split.py
     outs:
-    - data/intermediate/hcl_test_data.h5ad
-    - data/intermediate/hcl_train_data.h5ad
-    - data/intermediate/hcl_val_data.h5ad
+    - data/intermediate/covid_test_data.h5ad
+    - data/intermediate/covid_train_data.h5ad
+    - data/intermediate/covid_val_data.h5ad
   train_vae:
     cmd: $VAE_PY src/pipeline/train_vae.py
     params:
@@ -24,8 +17,8 @@ stages:
       - training.vae_trainer.max_epochs
       - training.vae_trainer.gpus
     deps:
-    - data/intermediate/hcl_test_data.h5ad
-    - data/intermediate/hcl_train_data.h5ad
-    - data/intermediate/hcl_val_data.h5ad
+    - data/intermediate/covid_test_data.h5ad
+    - data/intermediate/covid_train_data.h5ad
+    - data/intermediate/covid_val_data.h5ad
     outs:
     - data/artifacts/vae.onnx
