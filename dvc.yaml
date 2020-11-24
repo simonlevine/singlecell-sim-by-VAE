@@ -2,23 +2,23 @@ stages:
   test_train_val_split:
     cmd: $VAE_PY src/pipeline/test_train_val_split.py
     deps:
-    - data/raw/HCL_final_USE.h5ad
+    - data/raw/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection.h5ad
     - src/pipeline/test_train_val_split.py
     outs:
-    - data/intermediate/hcl_test_data.h5ad
-    - data/intermediate/hcl_train_data.h5ad
-    - data/intermediate/hcl_val_data.h5ad
+    - data/intermediate/covid_test_data.h5ad
+    - data/intermediate/covid_train_data.h5ad
+    - data/intermediate/covid_val_data.h5ad
   train_vae:
     cmd: $VAE_PY src/pipeline/train_vae.py
     params:
     - params.toml:
-      - model.latent_dimensions
+      - training.latent_dimensions_initial_guess
       - training.batch_size
       - training.vae_trainer.max_epochs
       - training.vae_trainer.gpus
     deps:
-    - data/intermediate/hcl_test_data.h5ad
-    - data/intermediate/hcl_train_data.h5ad
-    - data/intermediate/hcl_val_data.h5ad
+    - data/intermediate/covid_test_data.h5ad
+    - data/intermediate/covid_train_data.h5ad
+    - data/intermediate/covid_val_data.h5ad
     outs:
     - data/artifacts/vae.onnx

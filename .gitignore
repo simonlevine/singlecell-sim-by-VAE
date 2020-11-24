@@ -213,3 +213,7 @@ $RECYCLE.BIN/
 secrets.json
 .vscode/settings.json
 lightning_logs
+/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection.h5ad
+data/raw/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection.h5ad
+src/pipeline/testing.ipynb
+data/intermediate/test_out.h5ad
