@@ -13,9 +13,9 @@ stages:
     params:
     - params.toml:
       - training.latent_dimensions_initial_guess
+      - training.newton_temperature
       - training.batch_size
       - training.vae_trainer.max_epochs
-      - training.vae_trainer.gpus
     deps:
     - data/intermediate/covid_test_data.h5ad
     - data/intermediate/covid_train_data.h5ad
