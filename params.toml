@@ -2,6 +2,7 @@
 
 [training]
 latent_dimensions_initial_guess = 32
+newton_temperature = 10
 batch_size = 256
 
 [training.vae_trainer]

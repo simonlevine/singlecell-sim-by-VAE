@@ -24,7 +24,7 @@ def main():
     train_vae(latent_dims_best, data, params.training.batch_size, MODEL_WEIGHTS_ONNX_FP)
 
 
-def tune_vae(x_0, dx=1, n_iterations=10, temperature=100, **kwargs):
+def tune_vae(x_0, dx=1, n_iterations=10, **kwargs):
     """Tune number of latent dimensions using Newtons method and 
     Taylor approximation of derivative of VAE w.r.t number of
     latent dimensions
@@ -53,8 +53,11 @@ def tune_vae(x_0, dx=1, n_iterations=10, temperature=100, **kwargs):
         c = run_and_cache(x)
         f_prime = (a-b) / (2*dx)
         f_prime_prime = (a+b-2*c) / (dx**2)
-        x = x - (temperature * f_prime / f_prime_prime)
-        x = int(x)
+        delta = (params.training.newton_temperature * f_prime / f_prime_prime)
+        if x - delta < 1:
+            break
+        else:
+            x = int(x - delta)
     return x
 
 def train_vae(n_latent_dimensions, data, batch_size, model_path=None, max_epochs=None):
