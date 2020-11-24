@@ -12,7 +12,7 @@ stages:
     cmd: $VAE_PY src/pipeline/train_vae.py
     params:
     - params.toml:
-      - model.latent_dimensions
+      - training.latent_dimensions_initial_guess
       - training.batch_size
       - training.vae_trainer.max_epochs
       - training.vae_trainer.gpus

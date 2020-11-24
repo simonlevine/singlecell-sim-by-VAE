@@ -13,17 +13,22 @@ datasplit:
 test_train_val_split:
   cmd: $VAE_PY src/pipeline/test_train_val_split.py
   deps:
-  - path: data/raw/HCL_final_USE.h5ad
-    md5: 646394dafa89c28677cc462947e6d7a7
+  - path: data/raw/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection.h5ad
+    md5: 9126c2e5dcd4cacac9657b0111ced8d8
+    size: 1680490384
   - path: src/pipeline/test_train_val_split.py
-    md5: a12969d53107ae33d1a44bb34dafe400
+    md5: 5cc4ec03e3df8774e7bb0680e55262c4
+    size: 941
   outs:
-  - path: data/intermediate/hcl_test_data.h5ad
-    md5: e61bb138ee02bb158788a783015a89ab
-  - path: data/intermediate/hcl_train_data.h5ad
-    md5: 9fb6649f2e5e016a22b733e36c13e1b1
-  - path: data/intermediate/hcl_val_data.h5ad
-    md5: 878d83389219ee4312a8f12d6314b9d6
+  - path: data/intermediate/covid_test_data.h5ad
+    md5: 4dfd09daac884696f029a0048dc3e0fa
+    size: 176913279
+  - path: data/intermediate/covid_train_data.h5ad
+    md5: b6d27edb99d5e7d72955bc6f4c4b951d
+    size: 1345308645
+  - path: data/intermediate/covid_val_data.h5ad
+    md5: d0cdb8feb7a3655603cdb8c9b05598db
+    size: 174185618
 train_vae:
   cmd: $VAE_PY src/pipeline/train_vae.py
   deps:
