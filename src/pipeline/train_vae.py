@@ -118,13 +118,13 @@ class LitVae1d(pl.LightningModule):
         return self.vae.forward(x)
         
     def training_step(self, batch, batch_idx):
-        x, _ = batch
+        x, *_ = batch
         x_reconstructed, _, mu, log_var  = self.forward(x)
         loss = self.vae.loss_function(x_reconstructed, x, mu, log_var, M_N=self.M_N)["loss"]
         return loss
     
     def validation_step(self, batch, batch_idx):
-        x, _ = batch
+        x, *_ = batch
         x_reconstructed, _, mu, log_var  = self.forward(x)
         loss = self.vae.loss_function(x_reconstructed, x, mu, log_var, M_N=self.M_N)["loss"]
         return {"val_loss": loss,

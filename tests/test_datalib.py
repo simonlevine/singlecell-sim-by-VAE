@@ -18,9 +18,11 @@ def first_training_example(train_dataset):
 
 
 def test_correct_dimensions(first_training_example, train_dataset, datamodule):
-    gene_expression, cell_type = first_training_example
+    gene_expression, cell_type, ventilator_status = first_training_example
     n_genes, = gene_expression.shape
-    _, n_cell_types = cell_type.shape
+    n_cell_types, = cell_type.shape
+    n_ventilator_statuses, = ventilator_status.shape
     assert n_genes == len(datamodule.genes)
-    assert n_cell_types >= len(train_dataset.tissues)
-    assert n_cell_types == len(datamodule.tissues)
+    assert n_cell_types >= len(train_dataset.cell_types)
+    assert n_cell_types == len(datamodule.cell_types)
+    assert n_ventilator_statuses == 3
