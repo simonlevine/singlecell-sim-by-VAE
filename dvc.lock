@@ -39,8 +39,8 @@ train_vae:
     md5: b6d27edb99d5e7d72955bc6f4c4b951d
     size: 1345308645
   - path: src/pipeline/train_vae.py
-    md5: 1aa49bfc24ab08b0c8acf4bbc5096f7e
-    size: 5496
+    md5: 532820bf84588590bbb7ddc56fa92823
+    size: 7100
   params:
     params.toml:
       training.batch_size: 256
@@ -49,19 +49,19 @@ train_vae:
       training.vae_trainer.max_epochs: 10
   outs:
   - path: data/artifacts/vae.pth
-    md5: a1cd94c122d801011ad2a7e6407c6d83
-    size: 8499061
+    md5: 96e6071ff0287b308df41ebe34c2ec80
+    size: 8363637
   - path: data/artifacts/vae.pth.json
-    md5: 3066ff85ae4de468862d5b4a39b670eb
+    md5: fc74498e49f2e85ddda8666bc8219f75
     size: 69
 simulation:
   cmd: $VAE_PY src/pipeline/simulation.py
   deps:
   - path: data/artifacts/vae.pth
-    md5: a1cd94c122d801011ad2a7e6407c6d83
-    size: 8499061
+    md5: 96e6071ff0287b308df41ebe34c2ec80
+    size: 8363637
   - path: data/artifacts/vae.pth.json
-    md5: 3066ff85ae4de468862d5b4a39b670eb
+    md5: fc74498e49f2e85ddda8666bc8219f75
     size: 69
   - path: data/intermediate/covid_train_data.h5ad
     md5: b6d27edb99d5e7d72955bc6f4c4b951d
@@ -71,5 +71,5 @@ simulation:
     size: 3498
   outs:
   - path: data/artifacts/simulation_gene_expression.pq
-    md5: fe1e8662e530c6ac349e3c8bd39028db
-    size: 427705095
+    md5: 1238d3b9d3c7601dc16d2c30bd901ca5
+    size: 435829506
