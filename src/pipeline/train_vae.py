@@ -4,12 +4,13 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 # ignore single threaded dataloader warning; AnnData  is single threaded
 warnings.simplefilter(action="ignore", category=UserWarning)
 import json
-from collections import defaultdict
 from typing import Optional, List
+import pandas as pd
 import torch
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 from loguru import logger
+from tqdm import trange
 
 from pipeline.trainlib.vae import Vanilla1dVAE
 from pipeline.datalib import load_single_cell_data
@@ -17,9 +18,14 @@ from pipeline.helpers.params import params
 from pipeline.helpers.paths import VAE_WEIGHTS_FP, VAE_METADATA_JSON_FP, INTERMEDIATE_DATA_DIR
 
 
+import wandb
+wandb.init(project='02718-vae')
+
+
 def main():
     """use Newton-Raphson to determine the latent dimensions, retrain using the best one"""
     pl.seed_everything(42)
+    logger.info("loading data (takes about a minute)")
     data = load_single_cell_data(batch_size=params.training.batch_size)
     latent_dims_best = tune_vae(32, data=data, batch_size=params.training.batch_size)
     train_vae(latent_dims_best, data, params.training.batch_size, VAE_WEIGHTS_FP, VAE_METADATA_JSON_FP)
@@ -44,24 +50,53 @@ def tune_vae(x_0, dx=1, n_iterations=10, **kwargs):
     def run_and_cache(x):
         if x in cache:
             return cache[x]
-        _, log_likelihood = train_vae(x, **kwargs)
+        _, log_likelihood = train_vae(x, logging_enabled=False, **kwargs)
         cache[x] = log_likelihood
         return log_likelihood
     x = x_0
-    for _ in range(n_iterations):
-        a = run_and_cache(x+dx)
-        b = run_and_cache(x-dx)
-        c = run_and_cache(x)
-        f_prime = (a-b) / (2*dx)
-        f_prime_prime = (a+b-2*c) / (dx**2)
-        delta = (params.training.newton_temperature * f_prime / f_prime_prime)
-        if x - delta < 1:
-            break
-        else:
-            x = int(x - delta)
+    temperature = params.training.newton_temperature
+    intermediary_results = []
+    for i in trange(n_iterations, unit="newton-raphson iteration"):
+        while True:
+            a = run_and_cache(x+dx)
+            b = run_and_cache(x-dx)
+            c = run_and_cache(x)
+            f_prime = (a-b) / (2*dx)
+            f_prime_prime = (a+b-2*c) / (dx**2)
+            delta = (temperature * f_prime / f_prime_prime)
+            if 1 < (x - delta):
+                intermediary_results.append({
+                    "i": i,
+                    "f_prime": f_prime,
+                    "f_prime_prime": f_prime_prime,
+                    "temperature": temperature,
+                    "x_n": x,
+                    "x_n+1": int(x - delta),
+                })
+                x = int(x - delta)
+                break
+            else:
+                logger.info(
+                    "{} - {} results in a negative number of latent dimensions! "
+                    "reducing temperature {} -> {}", x, delta, temperature, temperature*0.5)
+                temperature = temperature * 0.5
+    # report what happened during tuning
+    log_likelihoods = []
+    for n_dimensions, (_, ll) in cache.items():
+        log_likelihoods.append({"n_dimensions": n_dimensions, "log_likelihood": ll})
+    log_likelihoods_table = wandb.Table(dataframe=pd.DataFrame.from_records(log_likelihoods))
+    newton_table = wandb.Table(dataframe=pd.DataFrame.from_records(intermediary_results))
+    wandb.log({"newton_raphson_progress": newton_table,
+               "log_likelihood": log_likelihoods_table})
     return x
 
-def train_vae(n_latent_dimensions, data, batch_size, model_path=None, model_metadata_path=None, max_epochs=None):
+def train_vae(n_latent_dimensions,
+              data,
+              batch_size,
+              model_path=None,
+              model_metadata_path=None,
+              max_epochs=None,
+              logging_enabled=True):
     """train the VAE with a specific number of dimensions
 
     Args:
@@ -70,12 +105,13 @@ def train_vae(n_latent_dimensions, data, batch_size, model_path=None, model_meta
         model_path (Optional[Pathlike]): where to save model state dict, if specified
         model_metadata_path (Optional[Pathlike]): where to save the model metadata to properly deserialize state dict, if specified
         max_epochs (Optional[int]): number of epochs, overwriting the default in params.toml
+        logging_enabled (bool): report to wand.ai?
 
     Returns (float): log-likelihood
     """
     n_latent_dimensions = int(n_latent_dimensions)
     M_N = batch_size / len(data.train_dataset)
-    vae_kwargs = {"in_features": len(data.genes), "latent_dim": n_latent_dimensions, "M_N": M_}
+    vae_kwargs = {"in_features": len(data.genes), "latent_dim": n_latent_dimensions, "M_N": M_N}
     vae = LitVae1d(**vae_kwargs)
     wandb_logger = WandbLogger(name=f"vae-{n_latent_dimensions}-latent-dims", project='02718-vae')
     train_opts = params.training.vae_trainer
@@ -86,7 +122,7 @@ def train_vae(n_latent_dimensions, data, batch_size, model_path=None, model_meta
             dirpath=INTERMEDIATE_DATA_DIR,
             monitor="val_loss",
         )],
-        logger=wandb_logger,
+        logger=wandb_logger if logging_enabled else True,
         **train_opts,
     )
     trainer.fit(vae, data)
