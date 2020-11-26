@@ -1,45 +1,85 @@
 import json
 from collections import defaultdict
 import numpy as np
-from pipeline.trainlib.vae import Vanilla1dVAE
+import pandas as pd
+import torch
+from anndata import AnnData
+from loguru import logger
+from tqdm import tqdm
+from pipeline.train_vae import LitVae1d
 from pipeline.datalib import load_single_cell_data
-from pipeline.helpers.paths import MODEL_WEIGHTS_ONNX_FP
+from pipeline.helpers.paths import VAE_WEIGHTS_FP, VAE_METADATA_JSON_FP, SIMULATED_GENE_EXPRESSION_FP
+
 
 def main():
+    logger.info("loading VAE model")
+    vae = rehydrate_vae()
+    logger.info("loading data (takes about a minute)")
     data = load_single_cell_data(batch_size=256)
-    n_samples_needed_per_cell_type = ...
-
-    class_mu = determine_mus_by_class(vae, data.train_dataloader())
-    new_data = []
-    for n_samples_needed, cell_type in n_samples_needed_per_cell_type():
+    logger.info("determing cell type class representation")
+    class_mu = determine_mus_by_class(vae, data.train_dataloader(), data.train_dataset.cell_type_encoder)
+    simulated_gene_expressions = []
+    n_samples_needed_per_cell_type = determine_n_samples_needed_per_cell_type(data.train_dataset.annotations)
+    logger.info("simulating gene expression")
+    iter_ = n_samples_needed_per_cell_type.items()
+    for cell_type, n_samples_needed  in tqdm(iter_):
         mu = class_mu[cell_type]
-        row = sample(n_samples_needed, vae, mu, epsilon=0.05)
-        new_data.append((cell_type, row))
-        
+        simulated_gene_expression = sample(n_samples_needed, vae, mu, epsilon=0.05)
+        simulated_gene_expressions.append(([cell_type] * n_samples_needed, simulated_gene_expression))
+    cell_types, gene_expressions = zip(*simulated_gene_expressions)
+    cell_type_arr = np.array(sum(cell_types, []))
+    gene_expressions = np.vstack(gene_expressions)
+    logger.info("saving simulation results")
+    pd.DataFrame(columns=data.train_dataset.genes, data=gene_expressions) \
+        .assign(cell_type=cell_type_arr) \
+        .to_parquet(SIMULATED_GENE_EXPRESSION_FP, compression="GZIP")
+
 
 def rehydrate_vae():
     with open(VAE_METADATA_JSON_FP) as f:
         vae_metadata = json.load(f)
-    vae = Vanilla1dVAE(**vae_metadata)
-    vae.load_state_dict(VAE_WEIGHTS_FP)
+    vae = LitVae1d(**vae_metadata)
+    vae.load_state_dict(torch.load(VAE_WEIGHTS_FP))
     vae.eval()
-    return vae
+    return vae.vae
 
-def determine_mus_by_class(vae, train_dataloader):
+
+def determine_n_samples_needed_per_cell_type(covid: AnnData, minimum_cells_per_type=1000):
+    """
+    Args:
+        covid (AnnData): observational data
+        minimum_cells_per_type (int, optional): minimum number of cells to have after augmentation (i.e. simulated + observed). Defaults to 1000.
+
+    Returns:
+        Dict[byte, int]: how many cells per cell type (encoded as bytes) to get from simulation
+    """
+    cell_counts = covid.obs.cell_type_coarse.value_counts()
+    cell_types2upsample = cell_counts[cell_counts < minimum_cells_per_type]
+    return (minimum_cells_per_type - cell_types2upsample).to_dict()
+
+
+def determine_mus_by_class(vae, train_dataloader, cell_type_encoder):
     class_mus = defaultdict(list)
-    for batch in train_dataloader:
-        gene_expression, cell_type, ventilator_status = batch
-        mu, _ = vae.encode(gene_expression)
-        class_mus[cell_type].append(mu.item())
-    class_mu = {class_: sum(mus) / len(mus)
+    for batch in tqdm(train_dataloader):
+        gene_expressions, cell_types, ventilator_statuses = batch
+        cell_types = cell_type_encoder.inverse_transform(cell_types)
+        with torch.no_grad():
+            mus, _ = vae.encode(gene_expressions)
+        batch_size, _ = gene_expressions.shape
+        for i in range(batch_size):
+            class_mus[cell_types[i].item()].append(mus[i,:].numpy())
+    class_mu = {class_: np.vstack(mus).mean(axis=0)
         for (class_, mus) in class_mus.items()}
     return class_mu
 
 
 def sample(n, vae, mu: np.array, epsilon=0):
     latent_target = np.random.multivariate_normal(
-        mu, cov=np.identity() * epsilon, size=n)
-    return vae.decode(latent_target)
+        mu, cov=np.identity(mu.shape[0]) * epsilon, size=n)
+    latent_target = torch.from_numpy(latent_target).to(torch.float32)
+    with torch.no_grad():
+        simulation_result = vae.decode(latent_target)
+    return simulation_result.numpy()
 
 
 if __name__ == "__main__":

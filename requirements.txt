@@ -13,4 +13,4 @@ loguru
 scikit-learn
 pytest
 wandb
-onnxruntime
+fastparquet
