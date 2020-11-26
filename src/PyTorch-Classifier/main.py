@@ -29,10 +29,8 @@ class SingleCellClassifier(pl.LightningModule):
         self.hidden_size = 2048
         self.learning_rate = learning_rate
 
-        # Hardcode some dataset specific attributes
         self.num_classes = 3
 
-        # Define PyTorch model
         self.fc1 = nn.Sequential(
             nn.Linear(self.input_size, 4096),
             nn.ReLU(),
