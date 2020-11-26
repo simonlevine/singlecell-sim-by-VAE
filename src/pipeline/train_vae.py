@@ -50,13 +50,17 @@ def tune_vae(x_0, dx=1, n_iterations=10, **kwargs):
     def run_and_cache(x):
         if x in cache:
             return cache[x]
-        _, log_likelihood = train_vae(x, logging_enabled=False, **kwargs)
+        _, log_likelihood = train_vae(
+            x, logging_enabled=False,
+            max_epochs=1,
+            **kwargs)
         cache[x] = log_likelihood
         return log_likelihood
     x = x_0
     temperature = params.training.newton_temperature
     intermediary_results = []
-    for i in trange(n_iterations, unit="newton-raphson iteration"):
+    for i in range(n_iterations):
+        logger.info("newton-rhapson {}/{}", i, n_iterations)
         while True:
             a = run_and_cache(x+dx)
             b = run_and_cache(x-dx)
@@ -67,6 +71,7 @@ def tune_vae(x_0, dx=1, n_iterations=10, **kwargs):
             if 1 < (x - delta):
                 intermediary_results.append({
                     "i": i,
+                    "f": c,
                     "f_prime": f_prime,
                     "f_prime_prime": f_prime_prime,
                     "temperature": temperature,
@@ -82,7 +87,7 @@ def tune_vae(x_0, dx=1, n_iterations=10, **kwargs):
                 temperature = temperature * 0.5
     # report what happened during tuning
     log_likelihoods = []
-    for n_dimensions, (_, ll) in cache.items():
+    for n_dimensions, ll in cache.items():
         log_likelihoods.append({"n_dimensions": n_dimensions, "log_likelihood": ll})
     log_likelihoods_table = wandb.Table(dataframe=pd.DataFrame.from_records(log_likelihoods))
     newton_table = wandb.Table(dataframe=pd.DataFrame.from_records(intermediary_results))
@@ -165,6 +170,7 @@ class LitVae1d(pl.LightningModule):
         x, *_ = batch
         x_reconstructed, _, mu, log_var  = self.forward(x)
         loss = self.vae.loss_function(x_reconstructed, x, mu, log_var, M_N=self.M_N)["loss"]
+        self.log("val_loss", loss)
         return {"val_loss": loss,
                 "mu^2": torch.pow(mu.sum(axis=0), 2),
                 "n": x.shape[0]}
