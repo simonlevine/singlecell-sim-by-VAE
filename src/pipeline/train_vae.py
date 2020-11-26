@@ -3,6 +3,7 @@ import warnings
 warnings.simplefilter(action="ignore", category=FutureWarning)
 # ignore single threaded dataloader warning; AnnData  is single threaded
 warnings.simplefilter(action="ignore", category=UserWarning)
+import json
 from collections import defaultdict
 from typing import Optional, List
 import torch
@@ -13,7 +14,7 @@ from loguru import logger
 from pipeline.trainlib.vae import Vanilla1dVAE
 from pipeline.datalib import load_single_cell_data
 from pipeline.helpers.params import params
-from pipeline.helpers.paths import VAE_WEIGHTS_FP, INTERMEDIATE_DATA_DIR
+from pipeline.helpers.paths import VAE_WEIGHTS_FP, VAE_METADATA_JSON_FP, INTERMEDIATE_DATA_DIR
 
 
 def main():
@@ -21,7 +22,7 @@ def main():
     pl.seed_everything(42)
     data = load_single_cell_data(batch_size=params.training.batch_size)
     latent_dims_best = tune_vae(32, data=data, batch_size=params.training.batch_size)
-    train_vae(latent_dims_best, data, params.training.batch_size, VAE_WEIGHTS_FP)
+    train_vae(latent_dims_best, data, params.training.batch_size, VAE_WEIGHTS_FP, VAE_METADATA_JSON_FP)
 
 
 def tune_vae(x_0, dx=1, n_iterations=10, **kwargs):
@@ -60,20 +61,22 @@ def tune_vae(x_0, dx=1, n_iterations=10, **kwargs):
             x = int(x - delta)
     return x
 
-def train_vae(n_latent_dimensions, data, batch_size, model_path=None, max_epochs=None):
+def train_vae(n_latent_dimensions, data, batch_size, model_path=None, model_metadata_path=None, max_epochs=None):
     """train the VAE with a specific number of dimensions
 
     Args:
         n_latent_dimensions (int): number of latent dimensions
         data (pl.DataModule): HCL data
-        model_path (Optional[Pathlike]): where to save ONNX serialization, if specified
+        model_path (Optional[Pathlike]): where to save model state dict, if specified
+        model_metadata_path (Optional[Pathlike]): where to save the model metadata to properly deserialize state dict, if specified
         max_epochs (Optional[int]): number of epochs, overwriting the default in params.toml
 
     Returns (float): log-likelihood
     """
     n_latent_dimensions = int(n_latent_dimensions)
     M_N = batch_size / len(data.train_dataset)
-    vae = LitVae1d(in_features=len(data.genes), latent_dim=n_latent_dimensions, M_N=M_N)
+    vae_kwargs = {"in_features": len(data.genes), "latent_dim": n_latent_dimensions, "M_N": M_}
+    vae = LitVae1d(**vae_kwargs)
     wandb_logger = WandbLogger(name=f"vae-{n_latent_dimensions}-latent-dims", project='02718-vae')
     train_opts = params.training.vae_trainer
     if max_epochs:
@@ -89,7 +92,10 @@ def train_vae(n_latent_dimensions, data, batch_size, model_path=None, max_epochs
     trainer.fit(vae, data)
     logger.info("done.")
     if model_path:
+        assert model_metadata_path is not None
         torch.save(vae.state_dict(), model_path)
+        with open(model_metadata_path, "w") as f:
+            json.dump(vae_kwargs, f)
     log_likelihood = trainer.callback_metrics["log_likelihood"].item()
     return vae, log_likelihood
 

@@ -10,3 +10,4 @@ DATA_SPLIT_FPS = [
     for split_type in ["train", "test", "val"]
 ]
 VAE_WEIGHTS_FP = ARTIFACTS_DATA_DIR/"vae.pth"
+VAE_METADATA_JSON_FP = ARTIFACTS_DATA_DIR/"vae.pth.json"
