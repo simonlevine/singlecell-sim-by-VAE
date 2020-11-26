@@ -217,3 +217,7 @@ lightning_logs
 data/raw/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection.h5ad
 src/pipeline/testing.ipynb
 data/intermediate/test_out.h5ad
+data/artifacts/vae.pth
+data/artifacts/vae.pth.json
+data/intermediate/epoch=*.ckpt
+wandb/

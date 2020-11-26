@@ -17,9 +17,18 @@ stages:
       - training.batch_size
       - training.vae_trainer.max_epochs
     deps:
+    - src/pipeline/train_vae.py
     - data/intermediate/covid_test_data.h5ad
     - data/intermediate/covid_train_data.h5ad
-    - data/intermediate/covid_val_data.h5ad
     outs:
     - data/artifacts/vae.pth
     - data/artifacts/vae.pth.json
+  simulation:
+    cmd: $VAE_PY src/pipeline/simulation.py
+    deps:
+    - data/artifacts/vae.pth
+    - data/artifacts/vae.pth.json
+    - data/intermediate/covid_train_data.h5ad
+    - src/pipeline/simulation.py
+    outs:
+    - data/artifacts/simulation_gene_expression.pq

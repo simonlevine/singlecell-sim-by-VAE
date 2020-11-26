@@ -66,9 +66,9 @@ class SingleCellDataModule(pl.LightningDataModule):
             self.genes.update(dataset.genes)
             self.cell_types.update(dataset.cell_types)
             self.ventilator_statuses.update(dataset.ventilator_statuses)
-        cell_type_encoder = LabelEncoder(sparse=False)
+        cell_type_encoder = LabelEncoder()
         cell_type_encoder.fit(np.array(list(self.cell_types)).reshape(-1, 1))
-        ventilator_status_encoder = LabelEncoder(sparse=False)
+        ventilator_status_encoder = LabelEncoder()
         ventilator_status_encoder.fit(np.array(list(self.ventilator_statuses)).reshape(-1, 1))
         for dataset in [self.train_dataset, self.test_dataset, self.val_dataset]:
             dataset.cell_type_encoder = cell_type_encoder
