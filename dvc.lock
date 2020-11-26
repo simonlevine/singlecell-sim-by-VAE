@@ -32,9 +32,25 @@ test_train_val_split:
 train_vae:
   cmd: $VAE_PY src/pipeline/train_vae.py
   deps:
-  - path: data/intermediate/hcl_test_data.h5ad
-    md5: 31ba589fd7c074a71d1b47bdc2f1fe37
-  - path: data/intermediate/hcl_train_data.h5ad
-    md5: 70da7f4d2eba3b10d750520c585a96de
-  - path: data/intermediate/hcl_val_data.h5ad
-    md5: 083a89588fa1023fd75a67dd24340806
+  - path: data/intermediate/covid_test_data.h5ad
+    md5: 4dfd09daac884696f029a0048dc3e0fa
+    size: 176913279
+  - path: data/intermediate/covid_train_data.h5ad
+    md5: b6d27edb99d5e7d72955bc6f4c4b951d
+    size: 1345308645
+  - path: data/intermediate/covid_val_data.h5ad
+    md5: d0cdb8feb7a3655603cdb8c9b05598db
+    size: 174185618
+  - path: src/pipeline/train_vae.py
+    md5: 7e13fe22638e3542672d4201c1f143e0
+    size: 5429
+  params:
+    params.toml:
+      training.batch_size: 256
+      training.latent_dimensions_initial_guess: 32
+      training.newton_temperature: 100
+      training.vae_trainer.max_epochs: 10
+  outs:
+  - path: data/artifacts/vae.onnx
+    md5: 47927372f8f4876836ba9e6e011d6c7f
+    size: 8481326

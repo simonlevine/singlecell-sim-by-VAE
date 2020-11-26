@@ -2,10 +2,10 @@
 
 [training]
 latent_dimensions_initial_guess = 32
-newton_temperature = 10
+newton_temperature = 100
 batch_size = 256
 
 [training.vae_trainer]
 # See: https://pytorch-lightning.readthedocs.io/en/latest/trainer.html
-max_epochs = 1
-gpus = 1
+max_epochs = 10
+gpus = 0

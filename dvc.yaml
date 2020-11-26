@@ -17,6 +17,7 @@ stages:
       - training.batch_size
       - training.vae_trainer.max_epochs
     deps:
+    - src/pipeline/train_vae.py
     - data/intermediate/covid_test_data.h5ad
     - data/intermediate/covid_train_data.h5ad
     - data/intermediate/covid_val_data.h5ad
