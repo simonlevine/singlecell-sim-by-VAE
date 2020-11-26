@@ -9,4 +9,4 @@ DATA_SPLIT_FPS = [
     INTERMEDIATE_DATA_DIR / f"covid_{split_type}_data.h5ad"
     for split_type in ["train", "test", "val"]
 ]
-MODEL_WEIGHTS_ONNX_FP = ARTIFACTS_DATA_DIR/"vae.onnx"
+VAE_WEIGHTS_FP = ARTIFACTS_DATA_DIR/"vae.pth"

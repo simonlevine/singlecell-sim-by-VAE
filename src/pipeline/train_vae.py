@@ -13,7 +13,7 @@ from loguru import logger
 from pipeline.trainlib.vae import Vanilla1dVAE
 from pipeline.datalib import load_single_cell_data
 from pipeline.helpers.params import params
-from pipeline.helpers.paths import MODEL_WEIGHTS_ONNX_FP, INTERMEDIATE_DATA_DIR
+from pipeline.helpers.paths import VAE_WEIGHTS_FP, INTERMEDIATE_DATA_DIR
 
 
 def main():
@@ -21,7 +21,7 @@ def main():
     pl.seed_everything(42)
     data = load_single_cell_data(batch_size=params.training.batch_size)
     latent_dims_best = tune_vae(32, data=data, batch_size=params.training.batch_size)
-    train_vae(latent_dims_best, data, params.training.batch_size, MODEL_WEIGHTS_ONNX_FP)
+    train_vae(latent_dims_best, data, params.training.batch_size, VAE_WEIGHTS_FP)
 
 
 def tune_vae(x_0, dx=1, n_iterations=10, **kwargs):
@@ -89,11 +89,7 @@ def train_vae(n_latent_dimensions, data, batch_size, model_path=None, max_epochs
     trainer.fit(vae, data)
     logger.info("done.")
     if model_path:
-        vae.to_onnx(
-            model_path,
-            torch.randn((batch_size, len(data.genes))),
-            export_params=True
-        )
+        torch.save(vae.state_dict(), model_path)
     log_likelihood = trainer.callback_metrics["log_likelihood"].item()
     return vae, log_likelihood
 
