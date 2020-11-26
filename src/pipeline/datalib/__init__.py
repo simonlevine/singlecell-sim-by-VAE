@@ -3,7 +3,7 @@ import numpy as np
 import pytorch_lightning as pl
 import scanpy as sc
 import torch
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import LabelEncoder
 from torch.utils.data import DataLoader
 from pipeline.helpers.paths import DATA_SPLIT_FPS
 
@@ -12,7 +12,7 @@ class SingleCellDataset(torch.utils.data.IterableDataset):
     def __init__(self, anndata_fp, chunk_size=6000):
         self.annotations = sc.read_h5ad(anndata_fp, backed="r")
         self.genes = [str(gene) for gene in self.annotations.var_names.tolist()]
-        self.cell_types = self.annotations.obs.singler.unique().tolist()
+        self.cell_types = self.annotations.obs.cell_type_coarse.unique().tolist()
         self.ventilator_statuses = self.annotations.obs.Ventilated.unique().tolist()
         self.cell_type_encoder = None
         self.ventilator_status_encoder = None
@@ -32,7 +32,7 @@ class SingleCellDataset(torch.utils.data.IterableDataset):
             gene_expressions = self.annotations[s, :].X
             n_rows, _ = gene_expressions.shape
             if 0 < n_rows:
-                cell_type = self.annotations.obs.singler[s]
+                cell_type = self.annotations.obs.cell_type_coarse[s]
                 cell_type = np.array(cell_type).reshape(1,-1)
                 if self.cell_type_encoder:
                     cell_type = self.cell_type_encoder.transform(cell_type.T)
@@ -66,9 +66,9 @@ class SingleCellDataModule(pl.LightningDataModule):
             self.genes.update(dataset.genes)
             self.cell_types.update(dataset.cell_types)
             self.ventilator_statuses.update(dataset.ventilator_statuses)
-        cell_type_encoder = OneHotEncoder(sparse=False)
+        cell_type_encoder = LabelEncoder(sparse=False)
         cell_type_encoder.fit(np.array(list(self.cell_types)).reshape(-1, 1))
-        ventilator_status_encoder = OneHotEncoder(sparse=False)
+        ventilator_status_encoder = LabelEncoder(sparse=False)
         ventilator_status_encoder.fit(np.array(list(self.ventilator_statuses)).reshape(-1, 1))
         for dataset in [self.train_dataset, self.test_dataset, self.val_dataset]:
             dataset.cell_type_encoder = cell_type_encoder
