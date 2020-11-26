@@ -10,7 +10,6 @@ import torch
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 from loguru import logger
-from tqdm import trange
 
 from pipeline.trainlib.vae import Vanilla1dVAE
 from pipeline.datalib import load_single_cell_data
