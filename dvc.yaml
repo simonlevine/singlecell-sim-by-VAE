@@ -21,4 +21,5 @@ stages:
     - data/intermediate/covid_train_data.h5ad
     - data/intermediate/covid_val_data.h5ad
     outs:
-    - data/artifacts/vae.onnx
+    - data/artifacts/vae.pth
+    - data/artifacts/vae.pth.json
