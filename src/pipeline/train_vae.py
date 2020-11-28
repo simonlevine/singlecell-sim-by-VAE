@@ -5,6 +5,7 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=UserWarning)
 import json
 from typing import Optional, List
+import numpy as np
 import pandas as pd
 import torch
 import pytorch_lightning as pl
@@ -49,12 +50,12 @@ def tune_vae(x_0, dx=1, n_iterations=10, **kwargs):
     def run_and_cache(x):
         if x in cache:
             return cache[x]
-        _, log_likelihood = train_vae(
+        _, negative_log_likelihood = train_vae(
             x, logging_enabled=False,
-            max_epochs=1,
+            # max_epochs=1,
             **kwargs)
-        cache[x] = log_likelihood
-        return log_likelihood
+        cache[x] = negative_log_likelihood
+        return negative_log_likelihood
     x = x_0
     temperature = params.training.newton_temperature
     intermediary_results = []
@@ -85,13 +86,13 @@ def tune_vae(x_0, dx=1, n_iterations=10, **kwargs):
                     "reducing temperature {} -> {}", x, delta, temperature, temperature*0.5)
                 temperature = temperature * 0.5
     # report what happened during tuning
-    log_likelihoods = []
+    negative_log_likelihoods = []
     for n_dimensions, ll in cache.items():
-        log_likelihoods.append({"n_dimensions": n_dimensions, "log_likelihood": ll})
-    log_likelihoods_table = wandb.Table(dataframe=pd.DataFrame.from_records(log_likelihoods))
+        negative_log_likelihoods.append({"n_dimensions": n_dimensions, "negative_log_likelihood": ll})
+    negative_log_likelihoods_table = wandb.Table(dataframe=pd.DataFrame.from_records(negative_log_likelihoods))
     newton_table = wandb.Table(dataframe=pd.DataFrame.from_records(intermediary_results))
     wandb.log({"newton_raphson_progress": newton_table,
-               "log_likelihood": log_likelihoods_table})
+               "negative_log_likelihood": negative_log_likelihoods_table})
     return x
 
 def train_vae(n_latent_dimensions,
@@ -136,8 +137,8 @@ def train_vae(n_latent_dimensions,
         torch.save(vae.state_dict(), model_path)
         with open(model_metadata_path, "w") as f:
             json.dump(vae_kwargs, f)
-    log_likelihood = trainer.callback_metrics["log_likelihood"].item()
-    return vae, log_likelihood
+    negative_log_likelihood = trainer.callback_metrics["negative_log_likelihood"].item()
+    return vae, negative_log_likelihood
 
 
 class LitVae1d(pl.LightningModule):
@@ -171,13 +172,17 @@ class LitVae1d(pl.LightningModule):
         loss = self.vae.loss_function(x_reconstructed, x, mu, log_var, M_N=self.M_N)["loss"]
         self.log("val_loss", loss)
         return {"val_loss": loss,
-                "mu^2": torch.pow(mu.sum(axis=0), 2),
+                "mu": mu,
                 "n": x.shape[0]}
 
     def validation_epoch_end(self, validation_step_outputs):
         n = sum([x["n"] for x in validation_step_outputs])
-        log_likelihood = - 0.5*n*1.83 - 0.5*torch.stack([x["mu^2"] for x in validation_step_outputs]).sum()
-        return {"log_likelihood": log_likelihood}
+        residual = torch.vstack([x["mu"] for x in validation_step_outputs])
+        mu, sigma = 0, 1
+        negative_log_likelihood = (n/2) * np.log(np.pi) \
+                                + (n/2) * np.log(sigma**2) \
+                                + (1/(2*sigma**2)) * torch.sum((residual - mu).pow(2)).item()
+        return {"negative_log_likelihood": negative_log_likelihood}
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.vae.parameters())
