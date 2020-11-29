@@ -22,16 +22,20 @@ def main():
     n_samples_needed_per_cell_type = determine_n_samples_needed_per_cell_type(data.train_dataset.annotations)
     logger.info("simulating gene expression")
     iter_ = n_samples_needed_per_cell_type.items()
-    for cell_type, n_samples_needed  in tqdm(iter_):
-        mu = class_mu[cell_type]
+    for (cell_type, ventilator_status), n_samples_needed  in tqdm(iter_):
+        mu = class_mu[cell_type, ventilator_status]
         simulated_gene_expression = sample(n_samples_needed, vae, mu, epsilon=0.05)
-        simulated_gene_expressions.append(([cell_type] * n_samples_needed, simulated_gene_expression))
-    cell_types, gene_expressions = zip(*simulated_gene_expressions)
+        simulated_gene_expressions.append((
+            [cell_type] * n_samples_needed,
+            [ventilator_status] * n_samples_needed,
+            simulated_gene_expression))
+    cell_types, ventilator_statuses, gene_expressions = zip(*simulated_gene_expressions)
     cell_type_arr = np.array(sum(cell_types, []))
+    ventilator_status_arr = np.array(sum(ventilator_statuses, []))
     gene_expressions = np.vstack(gene_expressions)
     logger.info("saving simulation results")
     pd.DataFrame(columns=data.train_dataset.genes, data=gene_expressions) \
-        .assign(cell_type=cell_type_arr) \
+        .assign(cell_type=cell_type_arr, ventilator_status=ventilator_status_arr) \
         .to_parquet(SIMULATED_GENE_EXPRESSION_FP, compression="GZIP")
 
 
@@ -67,7 +71,8 @@ def determine_mus_by_class(vae, train_dataloader, cell_type_encoder):
             mus, _ = vae.encode(gene_expressions)
         batch_size, _ = gene_expressions.shape
         for i in range(batch_size):
-            class_mus[cell_types[i].item()].append(mus[i,:].numpy())
+            class_ = (cell_types[i].item(), ventilator_statuses[i].item())
+            class_mus[class_].append(mus[i,:].numpy())
     class_mu = {class_: np.vstack(mus).mean(axis=0)
         for (class_, mus) in class_mus.items()}
     return class_mu
