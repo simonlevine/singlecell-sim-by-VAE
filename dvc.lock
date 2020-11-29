@@ -17,18 +17,18 @@ test_train_val_split:
     md5: 9126c2e5dcd4cacac9657b0111ced8d8
     size: 1680490384
   - path: src/pipeline/test_train_val_split.py
-    md5: 5cc4ec03e3df8774e7bb0680e55262c4
-    size: 941
+    md5: 8067c9c08b26525ef81eb1e4950fad05
+    size: 922
   outs:
   - path: data/intermediate/covid_test_data.h5ad
-    md5: 4dfd09daac884696f029a0048dc3e0fa
-    size: 176913279
+    md5: 0dc9ec980ed260d85c4cbf6a199a4800
+    size: 175193054
   - path: data/intermediate/covid_train_data.h5ad
-    md5: b6d27edb99d5e7d72955bc6f4c4b951d
-    size: 1345308645
+    md5: 37004a4fe85b003316bed72f79c1207f
+    size: 1355067873
   - path: data/intermediate/covid_val_data.h5ad
-    md5: d0cdb8feb7a3655603cdb8c9b05598db
-    size: 174185618
+    md5: 323c361a180a4131b7a50c53e61f8cdb
+    size: 175066788
 train_vae:
   cmd: $VAE_PY src/pipeline/train_vae.py
   deps:
