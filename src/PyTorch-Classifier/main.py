@@ -8,7 +8,7 @@ from torch.nn import functional as F
 from torchvision.datasets import MNIST
 from torchvision import transforms
 import pytorch_lightning as pl
-from pytorch_lightning.metrics.functional import accuracy
+import pytorch_lightning.metrics.functional as metrics
 
 from pipeline.datalib import load_single_cell_data
 
@@ -38,24 +38,18 @@ class SingleCellClassifier(pl.LightningModule):
             nn.Linear(4096, 2048),
             nn.ReLU(),
             nn.Dropout(0.1),
-        )
-        self.fc2 = nn.Sequential(
             nn.Linear(2048, 2048),
             nn.ReLU(),
             nn.Dropout(0.1),
             nn.Linear(2048, 2048),
             nn.ReLU(),
-            nn.Dropout(0.1))
-
-        self.fc3 = nn.Sequential(
+            nn.Dropout(0.1),
             nn.Linear(2048, 2048),
             nn.ReLU(),
             nn.Dropout(0.1),
             nn.Linear(2048, 2048),
             nn.ReLU(),
-            nn.Dropout(0.1))
-
-        self.fc4 = nn.Sequential(
+            nn.Dropout(0.1),
             nn.Linear(2048, 2048),
             nn.ReLU(),
             nn.Dropout(0.1),
@@ -65,20 +59,19 @@ class SingleCellClassifier(pl.LightningModule):
 
         self.output = nn.Linear(1024, self.num_classes)
 
-    def forward(self,x,skip_conn=False):
-        if skip_conn:
-            residual = x
-            x = self.fc1(x)
-            x = self.fc2(x)
-            x = self.fc3(x+residual)
-            x = self.fc4(x+residual)
-
-        else:
-            x = self.fc1(x)
-            x = self.fc2(x)
-            x = self.fc3(x)
-            x = self.fc4(x)
-            
+    def forward(self,x): #,skip_conn=False):
+        # if skip_conn:
+        #     residual = x
+        #     x = self.fc1(x)
+        #     x = self.fc2(x)
+        #     x = self.fc3(x+residual)
+        #     x = self.fc4(x+residual)
+        # else:
+        
+        x = self.fc1(x)
+        # x = self.fc2(x)
+        # x = self.fc3(x)
+        # x = self.fc4(x)
         x = self.output(x)
         
         return F.log_softmax(x, dim=1)
@@ -94,7 +87,8 @@ class SingleCellClassifier(pl.LightningModule):
         logits = self(x)
         loss = F.nll_loss(logits, y)
         preds = torch.argmax(logits, dim=1)
-        acc = accuracy(preds, y)
+        acc = metrics.accuracy(preds, y)
+        f1 = metrics.f1_score(preds,y)
 
         self.log('val_loss', loss, prog_bar=True)
         self.log('val_acc', acc, prog_bar=True)
