@@ -14,6 +14,7 @@ from pipeline.helpers.paths import DATA_SPLIT_FPS, SIMULATED_GENE_EXPRESSION_FP
 ###############
 
 
+
 class SingleCellDataset(torch.utils.data.IterableDataset):
     def __init__(self, anndata_fp, chunk_size=6000):
         self.annotations = sc.read_h5ad(anndata_fp, backed="r")
@@ -89,8 +90,6 @@ class SingleCellDataModule(pl.LightningDataModule):
     def test_dataloader(self):
         return DataLoader(self.test_dataset, batch_size=self.batch_size)
 
-
-
 def load_single_cell_data(batch_size=32):
     data_module = SingleCellDataModule(*DATA_SPLIT_FPS, batch_size)
     data_module.setup()
@@ -125,11 +124,57 @@ class SimulatedSingleCellDataModule(pl.LightningDataModule):
     def setup(self, stage=None):
         self.train_dataset = SimulatedSingleCellDataset(self.train_fp)
 
+
+class ConcatDataset(torch.utils.data.Dataset):
+    def __init__(self, *datasets):
+        self.datasets = datasets
+
+    def __getitem__(self, i):
+        return tuple(d[i] for d in self.datasets)
+
+    def __len__(self):
+        return min(len(d) for d in self.datasets)
+
+
+class ConcatDataModule(pl.LightningDataModule):
+    def __init__(self, batch_size, *datamodules):
+        self.single_cell, self.simulated = datamodules
+        self.batch_size = batch_size
+
+    def setup(self, stage=None):
+
+        self.single_cell.setup()
+        self.simulated.setup()
+        
+        self.train_dataset = ConcatDataset(
+                    self.single_cell.train_dataset,
+                    self.simulated.train_dataset
+                    )
+        self.val_dataset = ConcatDataset(
+                    self.single_cell.val_dataset,
+                    self.simulated.val_dataset
+                    )
+
+        self.test_dataset = ConcatDataset(
+                    self.single_cell.test_dataset,
+                    self.simulated.test_dataset
+                    )
+
     def train_dataloader(self):
         return DataLoader(self.train_dataset, batch_size=self.batch_size)
 
+    def val_dataloader(self):
+        return DataLoader(self.val_dataset, batch_size=self.batch_size)
 
-def load_simulated_single_cell_data(batch_size=32):
-    data_module = SimulatedSingleCellDataModule(SIMULATED_GENE_EXPRESSION_FP, batch_size)
-    data_module.setup()
-    return data_module
+    def test_dataloader(self):
+        return DataLoader(self.test_dataset, batch_size=self.batch_size)
+
+
+def load_combined_single_cell_data(batch_size=32):
+    single_cell_datamodule = load_single_cell_data(*DATA_SPLIT_FPS, batch_size)
+    simulated_datamodule = load_simulated_single_cell_data(SIMULATED_GENE_EXPRESSION_FP, batch_size)
+    concat_datamodule = ConcatDataModule(batch_size,single_cell_datamodule,simulated_datamodule)
+    concat_datamodule.setup()
+    return concat_datamodule
+
+    

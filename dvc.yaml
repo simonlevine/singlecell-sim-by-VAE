@@ -32,3 +32,13 @@ stages:
     - src/pipeline/simulation.py
     outs:
     - data/artifacts/simulation_gene_expression.pq
+  deep_classifier_no_vae_data:
+    cmd: $VAE_PY src/PyTorch-Classifier/main.py
+    deps:
+    - data/intermediate/covid_test_data.h5ad
+    - data/intermediate/covid_train_data.h5ad
+    - data/intermediate/covid_val_data.h5ad
+
+  deep_classifier_with_vae:
+
+  naive_classifier:
