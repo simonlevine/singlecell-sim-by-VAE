@@ -7,6 +7,7 @@ from anndata import AnnData
 from loguru import logger
 from tqdm import tqdm
 from pipeline.train_vae import LitVae1d
+from pipeline.helpers.params import params
 from pipeline.datalib import load_single_cell_data
 from pipeline.helpers.paths import VAE_WEIGHTS_FP, VAE_METADATA_JSON_FP, SIMULATED_GENE_EXPRESSION_FP
 
@@ -48,19 +49,17 @@ def rehydrate_vae():
     return vae.vae
 
 
-def determine_n_samples_needed_per_class(covid: AnnData, minimum_cells_per_type=1000):
+def determine_n_samples_needed_per_class(covid: AnnData):
     """
     Args:
         covid (AnnData): observational data
-        minimum_cells_per_type (int, optional): minimum number of cells to have after augmentation (i.e. simulated + observed). Defaults to 1000.
-
     Returns:
         Dict[byte, int]: how many cells per cell type/health status to get from simulation
     """
     class_counts = covid.obs.groupby(["cell_type_coarse", "Ventilated"]) \
         .apply(lambda _df: len(_df))
-    cell_types2upsample = class_counts[class_counts < minimum_cells_per_type]
-    return (minimum_cells_per_type - cell_types2upsample).to_dict()
+    cell_types2upsample = class_counts[class_counts < params.simulation.minimum_cells_per_class]
+    return (params.simulation.minimum_cells_per_class - cell_types2upsample).to_dict()
 
 
 def determine_mus_by_class(vae, data):

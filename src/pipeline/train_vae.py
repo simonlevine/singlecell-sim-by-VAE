@@ -124,6 +124,7 @@ def train_vae(n_latent_dimensions,
     if max_epochs:
         train_opts["max_epochs"] = max_epochs
     trainer = pl.Trainer(
+        gpus=torch.cuda.device_count(),
         callbacks=[pl.callbacks.ModelCheckpoint(
             dirpath=INTERMEDIATE_DATA_DIR,
             monitor="val_loss",
