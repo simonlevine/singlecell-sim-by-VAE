@@ -33,43 +33,43 @@ train_vae:
   cmd: $VAE_PY src/pipeline/train_vae.py
   deps:
   - path: data/intermediate/covid_test_data.h5ad
-    md5: 4dfd09daac884696f029a0048dc3e0fa
-    size: 176913279
+    md5: 0dc9ec980ed260d85c4cbf6a199a4800
+    size: 175193054
   - path: data/intermediate/covid_train_data.h5ad
-    md5: b6d27edb99d5e7d72955bc6f4c4b951d
-    size: 1345308645
+    md5: 37004a4fe85b003316bed72f79c1207f
+    size: 1355067873
   - path: src/pipeline/train_vae.py
-    md5: 5005faf98ceaf943e1031ec5e661b91c
-    size: 7410
+    md5: edb4bc6ca67a0f1f322523380829519d
+    size: 7436
   params:
     params.toml:
       training.batch_size: 256
       training.latent_dimensions_initial_guess: 32
-      training.newton_temperature: 100
-      training.vae_trainer.max_epochs: 10
+      training.newton_temperature: 1
+      training.vae_trainer.max_epochs: 2
   outs:
   - path: data/artifacts/vae.pth
-    md5: c1a0b98f904a040e178c6625284b6c4b
-    size: 8357493
+    md5: 109c590c584652940e37eb3bf4f7befe
+    size: 8499061
   - path: data/artifacts/vae.pth.json
-    md5: 893eeee7e8c1a528118cddcb6e7e966d
-    size: 68
+    md5: 3066ff85ae4de468862d5b4a39b670eb
+    size: 69
 simulation:
   cmd: $VAE_PY src/pipeline/simulation.py
   deps:
   - path: data/artifacts/vae.pth
-    md5: c1a0b98f904a040e178c6625284b6c4b
-    size: 8357493
+    md5: 109c590c584652940e37eb3bf4f7befe
+    size: 8499061
   - path: data/artifacts/vae.pth.json
-    md5: 893eeee7e8c1a528118cddcb6e7e966d
-    size: 68
+    md5: 3066ff85ae4de468862d5b4a39b670eb
+    size: 69
   - path: data/intermediate/covid_train_data.h5ad
-    md5: b6d27edb99d5e7d72955bc6f4c4b951d
-    size: 1345308645
+    md5: 37004a4fe85b003316bed72f79c1207f
+    size: 1355067873
   - path: src/pipeline/simulation.py
-    md5: 105f4424cfec8d71f9932f76e4b240e4
-    size: 3498
+    md5: 88d01c9250d5ecbde28ace370bfaf66f
+    size: 4038
   outs:
   - path: data/artifacts/simulation_gene_expression.pq
-    md5: 4981ce5d14ad7fca5c7761d343a54863
-    size: 421823972
+    md5: bf277aac2857cbb6559a9b79bcb8d44c
+    size: 2638950730

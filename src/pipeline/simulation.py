@@ -17,9 +17,9 @@ def main():
     logger.info("loading data (takes about a minute)")
     data = load_single_cell_data(batch_size=256)
     logger.info("determing cell type class representation")
-    class_mu = determine_mus_by_class(vae, data.train_dataloader(), data.train_dataset.cell_type_encoder)
+    class_mu = determine_mus_by_class(vae, data)
     simulated_gene_expressions = []
-    n_samples_needed_per_cell_type = determine_n_samples_needed_per_cell_type(data.train_dataset.annotations)
+    n_samples_needed_per_cell_type = determine_n_samples_needed_per_class(data.train_dataset.annotations)
     logger.info("simulating gene expression")
     iter_ = n_samples_needed_per_cell_type.items()
     for (cell_type, ventilator_status), n_samples_needed  in tqdm(iter_):
@@ -48,25 +48,30 @@ def rehydrate_vae():
     return vae.vae
 
 
-def determine_n_samples_needed_per_cell_type(covid: AnnData, minimum_cells_per_type=1000):
+def determine_n_samples_needed_per_class(covid: AnnData, minimum_cells_per_type=1000):
     """
     Args:
         covid (AnnData): observational data
         minimum_cells_per_type (int, optional): minimum number of cells to have after augmentation (i.e. simulated + observed). Defaults to 1000.
 
     Returns:
-        Dict[byte, int]: how many cells per cell type (encoded as bytes) to get from simulation
+        Dict[byte, int]: how many cells per cell type/health status to get from simulation
     """
-    cell_counts = covid.obs.cell_type_coarse.value_counts()
-    cell_types2upsample = cell_counts[cell_counts < minimum_cells_per_type]
+    class_counts = covid.obs.groupby(["cell_type_coarse", "Ventilated"]) \
+        .apply(lambda _df: len(_df))
+    cell_types2upsample = class_counts[class_counts < minimum_cells_per_type]
     return (minimum_cells_per_type - cell_types2upsample).to_dict()
 
 
-def determine_mus_by_class(vae, train_dataloader, cell_type_encoder):
+def determine_mus_by_class(vae, data):
+    train_dataloader = data.train_dataloader()
+    cell_type_encoder = data.train_dataset.cell_type_encoder
+    ventilator_status_encoder = data.train_dataset.ventilator_status_encoder
     class_mus = defaultdict(list)
     for batch in tqdm(train_dataloader):
         gene_expressions, cell_types, ventilator_statuses = batch
         cell_types = cell_type_encoder.inverse_transform(cell_types)
+        ventilator_statuses = ventilator_status_encoder.inverse_transform(ventilator_statuses)
         with torch.no_grad():
             mus, _ = vae.encode(gene_expressions)
         batch_size, _ = gene_expressions.shape
