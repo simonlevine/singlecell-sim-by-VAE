@@ -1,11 +1,17 @@
 import itertools as it
 import numpy as np
+import pandas as pd
 import pytorch_lightning as pl
 import scanpy as sc
 import torch
 from sklearn.preprocessing import LabelEncoder
 from torch.utils.data import DataLoader
-from pipeline.helpers.paths import DATA_SPLIT_FPS
+from pipeline.helpers.paths import DATA_SPLIT_FPS, SIMULATED_GENE_EXPRESSION_FP
+
+
+###############
+## REAL DATA ##
+###############
 
 
 class SingleCellDataset(torch.utils.data.IterableDataset):
@@ -84,7 +90,46 @@ class SingleCellDataModule(pl.LightningDataModule):
         return DataLoader(self.test_dataset, batch_size=self.batch_size)
 
 
+
 def load_single_cell_data(batch_size=32):
     data_module = SingleCellDataModule(*DATA_SPLIT_FPS, batch_size)
+    data_module.setup()
+    return data_module
+
+###############
+## FAKE DATA ##
+###############
+
+class SimulatedSingleCellDataset(torch.utils.data.Dataset):
+    def __init__(self, fp):
+        self.df = pd.read_parquet(fp)
+        self.genes = [n for n in self.df.columns if n not in {"cell_type", "ventilator_status"}]
+
+    def __len__(self):
+        return len(self.df)
+
+    def __getitem__(self, i):
+        row_idx = self.dc.index[i]
+        gene_expression = self.df.loc[row_idx, self.genes]
+        cell_type = self.df.loc[row_idx, "cell_type"]
+        ventilator_status = self.df.loc[row_idx, "ventilator_status"]
+        return gene_expression, cell_type, ventilator_status
+
+
+class SimulatedSingleCellDataModule(pl.LightningDataModule):
+    def __init__(self, fp, batch_size):
+        super().__init__()
+        self.fp = fp
+        self.batch_size = batch_size
+
+    def setup(self, stage=None):
+        self.train_dataset = SimulatedSingleCellDataset(self.train_fp)
+
+    def train_dataloader(self):
+        return DataLoader(self.train_dataset, batch_size=self.batch_size)
+
+
+def load_simulated_single_cell_data(batch_size=32):
+    data_module = SimulatedSingleCellDataModule(SIMULATED_GENE_EXPRESSION_FP, batch_size)
     data_module.setup()
     return data_module

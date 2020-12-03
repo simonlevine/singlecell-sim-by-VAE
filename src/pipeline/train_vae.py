@@ -27,7 +27,8 @@ def main():
     pl.seed_everything(42)
     logger.info("loading data (takes about a minute)")
     data = load_single_cell_data(batch_size=params.training.batch_size)
-    latent_dims_best = tune_vae(32, data=data, batch_size=params.training.batch_size)
+    # latent_dims_best = tune_vae(32, data=data, batch_size=params.training.batch_size)
+    latent_dims_best = 32
     train_vae(latent_dims_best, data, params.training.batch_size, VAE_WEIGHTS_FP, VAE_METADATA_JSON_FP)
 
 
@@ -52,7 +53,7 @@ def tune_vae(x_0, dx=1, n_iterations=10, **kwargs):
             return cache[x]
         _, negative_log_likelihood = train_vae(
             x, logging_enabled=False,
-            # max_epochs=1,
+            max_epochs=1,
             **kwargs)
         cache[x] = negative_log_likelihood
         return negative_log_likelihood
