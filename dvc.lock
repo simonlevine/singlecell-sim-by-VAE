@@ -14,33 +14,33 @@ test_train_val_split:
   cmd: $VAE_PY src/pipeline/test_train_val_split.py
   deps:
   - path: data/raw/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection_subsampled.h5ad
-    md5: 86fd1e0203bbbd32ff1d49e4ae522f2c
-    size: 88929656
+    md5: c1641972b2f8156037c04e95a60b9f41
+    size: 1689986594
   - path: src/pipeline/test_train_val_split.py
     md5: eb65ff293bf0fb58c870ba0847f60d51
     size: 946
   outs:
   - path: data/intermediate/covid_test_data.h5ad
-    md5: 82fe3d725a5b159d13f57b4ce554c2ee
-    size: 11872954
+    md5: 5fc7c85e4ae88c1ebc392b0d758ee44a
+    size: 175009606
   - path: data/intermediate/covid_train_data.h5ad
-    md5: d71bc8d0b8c8a558758fedb6999a3b1d
-    size: 71971303
+    md5: 3aee0bee0a9f947f2269e71db281c6b5
+    size: 1355234559
   - path: data/intermediate/covid_val_data.h5ad
-    md5: 26d815f2ccaea7bff836e4c543ce47f9
-    size: 11825448
+    md5: b5dc5ec37090fb0f22b69d6d5dc4375e
+    size: 175097788
 train_vae:
   cmd: $VAE_PY src/pipeline/train_vae.py
   deps:
   - path: data/intermediate/covid_test_data.h5ad
-    md5: 82fe3d725a5b159d13f57b4ce554c2ee
-    size: 11872954
+    md5: 5fc7c85e4ae88c1ebc392b0d758ee44a
+    size: 175009606
   - path: data/intermediate/covid_train_data.h5ad
-    md5: d71bc8d0b8c8a558758fedb6999a3b1d
-    size: 71971303
+    md5: 3aee0bee0a9f947f2269e71db281c6b5
+    size: 1355234559
   - path: src/pipeline/train_vae.py
-    md5: 5d8524569885e1d553366985e3ec6a37
-    size: 7476
+    md5: bf518c170ab8de13adbfd1a7f7623e28
+    size: 7448
   params:
     params.toml:
       training.batch_size: 256
@@ -49,33 +49,33 @@ train_vae:
       training.vae_trainer.max_epochs: 2
   outs:
   - path: data/artifacts/vae.pth
-    md5: c579fc632ecf09f1ffefc245222badbe
-    size: 8499061
+    md5: 463c025c8afa1668832f214829925b8f
+    size: 8492917
   - path: data/artifacts/vae.pth.json
-    md5: 0ef134eb25e047e874ae3ef7aa568236
-    size: 68
+    md5: b6275973413e15b778ed1c1fdec4af69
+    size: 69
 simulation:
   cmd: $VAE_PY src/pipeline/simulation.py
   deps:
   - path: data/artifacts/vae.pth
-    md5: c579fc632ecf09f1ffefc245222badbe
-    size: 8499061
+    md5: 463c025c8afa1668832f214829925b8f
+    size: 8492917
   - path: data/artifacts/vae.pth.json
-    md5: 0ef134eb25e047e874ae3ef7aa568236
-    size: 68
+    md5: b6275973413e15b778ed1c1fdec4af69
+    size: 69
   - path: data/intermediate/covid_train_data.h5ad
-    md5: d71bc8d0b8c8a558758fedb6999a3b1d
-    size: 71971303
+    md5: 3aee0bee0a9f947f2269e71db281c6b5
+    size: 1355234559
   - path: src/pipeline/simulation.py
-    md5: 35155c4c2f1e5278f7160a8c4fdbb3fc
-    size: 3943
+    md5: 0418c37bc946a03517e87aab42fae5d7
+    size: 3944
   params:
     params.toml:
-      simulation.minimum_cells_per_class: 2
+      simulation.minimum_cells_per_class: 1000
   outs:
   - path: data/artifacts/simulation_gene_expression.pq
-    md5: ce542a4724398ee3fd457f8d456b36eb
-    size: 17059192
+    md5: aca44a395f061ab27c30b0867d83864d
+    size: 2652257939
 deep_classifier:
   cmd: $VAE_PY src/PyTorch-Classifier/main.py
   deps:
@@ -99,11 +99,11 @@ subsample:
     size: 383
   params:
     params.toml:
-      data.subsampling: 0.05
+      data.subsampling: 1
   outs:
   - path: data/raw/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection_subsampled.h5ad
-    md5: 86fd1e0203bbbd32ff1d49e4ae522f2c
-    size: 88929656
+    md5: c1641972b2f8156037c04e95a60b9f41
+    size: 1689986594
 classifier:
   cmd: $VAE_PY src/pipeline/classifier.py
   deps:

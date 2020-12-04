@@ -87,8 +87,8 @@ class SingleCellClassifier(pl.LightningModule):
                 "y_pred": y_pred}
 
     def _epoch_end(self, stage, steps):
-        y_true = torch.vstack([x["y_true"] for x in steps]).reshape(-1,1)
-        y_pred = torch.vstack([x["y_pred"] for x in steps]).reshape(-1,1)
+        y_true = torch.cat([x["y_true"] for x in steps]).reshape(-1,1)
+        y_pred = torch.cat([x["y_pred"] for x in steps]).reshape(-1,1)
         return {
             f"{stage}_acc": metrics.accuracy(y_pred, y_true),
             f"{stage}_f1": metrics.f1(y_pred, y_true, num_classes=self.num_classes),
