@@ -1,7 +1,7 @@
 # 02-712 Project Pipeline Settings
 
 [data]
-subsampling = 0.05
+subsampling = 1
 
 [training]
 latent_dimensions_initial_guess = 32
@@ -13,12 +13,11 @@ batch_size = 256
     max_epochs = 2
 
 [simulation]
-minimum_cells_per_class = 2
+minimum_cells_per_class = 1000
 
 [classifier]
 n_hidden_layers = 2
 
     [classifier.training_opts]
     # See: https://pytorch-lightning.readthedocs.io/en/latest/trainer.html
-    fast_dev_run = false
     max_epochs = 10
