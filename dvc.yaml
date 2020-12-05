@@ -1,8 +1,18 @@
 stages:
+  subsample:
+    cmd: $VAE_PY src/pipeline/subsample.py
+    params:
+    - params.toml:
+      - data.subsampling
+    deps:
+    - src/pipeline/subsample.py
+    - data/raw/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection.h5ad
+    outs:
+    - data/raw/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection_subsampled.h5ad
   test_train_val_split:
     cmd: $VAE_PY src/pipeline/test_train_val_split.py
     deps:
-    - data/raw/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection.h5ad
+    - data/raw/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection_subsampled.h5ad
     - src/pipeline/test_train_val_split.py
     outs:
     - data/intermediate/covid_test_data.h5ad
@@ -25,16 +35,27 @@ stages:
     - data/artifacts/vae.pth.json
   simulation:
     cmd: $VAE_PY src/pipeline/simulation.py
+    params:
+    - params.toml:
+      - simulation.minimum_cells_per_class
     deps:
+    - src/pipeline/simulation.py
     - data/artifacts/vae.pth
     - data/artifacts/vae.pth.json
     - data/intermediate/covid_train_data.h5ad
-    - src/pipeline/simulation.py
     outs:
     - data/artifacts/simulation_gene_expression.pq
-  deep_classifier:
-    cmd: $VAE_PY src/PyTorch-Classifier/main.py
+  classifier:
+    cmd: $VAE_PY src/pipeline/classifier.py
+    params:
+    - params.toml:
+      - classifier.n_hidden_layers
+      - classifier.training_opts.max_epochs
     deps:
+    - src/pipeline/classifier.py
     - data/intermediate/covid_test_data.h5ad
     - data/intermediate/covid_train_data.h5ad
     - data/intermediate/covid_val_data.h5ad
+    outs:
+    - data/artifacts/classifer_w_simulated_data_metrics.json
+    - data/artifacts/classifer_wout_simulated_data_metrics.json

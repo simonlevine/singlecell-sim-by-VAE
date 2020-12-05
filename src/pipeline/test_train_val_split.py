@@ -4,11 +4,11 @@ import anndata
 import random
 from tqdm import tqdm
 from loguru import logger
-from pipeline.helpers.paths import RAW_DATA_FP, DATA_SPLIT_FPS
+from pipeline.helpers.paths import SUBSAMPLED_DATA_DIR, DATA_SPLIT_FPS
 
 logger.info("Please note this process takes about 10 minutes")
 
-covid_dataset = anndata.read_h5ad(RAW_DATA_FP, backed="r")
+covid_dataset = anndata.read_h5ad(SUBSAMPLED_DATA_DIR, backed="r")
 
 n, _ = covid_dataset.shape
 idxs = random.sample(range(n), k=n)
@@ -25,4 +25,4 @@ for split_type, i, j, outfp in tqdm(splits, unit="split"):
     logger.info("Extracting single cell {} data within [{},{})", split_type, i, j)
     split = covid_dataset[idxs[i:j]]
     split.write_h5ad(outfp, compression="gzip")
-    covid_dataset = anndata.read_h5ad(RAW_DATA_FP, backed="r")
+    covid_dataset = anndata.read_h5ad(SUBSAMPLED_DATA_DIR, backed="r")

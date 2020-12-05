@@ -27,8 +27,7 @@ def main():
     pl.seed_everything(42)
     logger.info("loading data (takes about a minute)")
     data = load_single_cell_data(batch_size=params.training.batch_size)
-    # latent_dims_best = tune_vae(32, data=data, batch_size=params.training.batch_size)
-    latent_dims_best = 32
+    latent_dims_best = tune_vae(32, data=data, batch_size=params.training.batch_size)
     train_vae(latent_dims_best, data, params.training.batch_size, VAE_WEIGHTS_FP, VAE_METADATA_JSON_FP)
 
 
@@ -124,6 +123,7 @@ def train_vae(n_latent_dimensions,
     if max_epochs:
         train_opts["max_epochs"] = max_epochs
     trainer = pl.Trainer(
+        gpus=torch.cuda.device_count(),
         callbacks=[pl.callbacks.ModelCheckpoint(
             dirpath=INTERMEDIATE_DATA_DIR,
             monitor="val_loss",
