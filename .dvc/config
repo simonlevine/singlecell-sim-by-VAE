@@ -1,4 +1,0 @@
-[core]
-    remote = gs
-['remote "gs"']
-    url = gs://simulation-final-proj-data
