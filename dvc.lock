@@ -1,0 +1,111 @@
+subsample:
+  cmd: $VAE_PY src/pipeline/subsample.py
+  deps:
+  - path: data/raw/covid19.h5ad
+    md5: c3e66ea8d17fcef1dec63de51893af80
+    size: 2293697930
+  - path: src/pipeline/subsample.py
+    md5: 2cff5fa14532b511b290232468a7d07e
+    size: 383
+  params:
+    params.toml:
+      data.subsampling: 0.25
+  outs:
+  - path: data/raw/covid19_subsampled.h5ad
+    md5: 8327ef5f07470c4b72771bce5adc5fc1
+    size: 428636349
+test_train_val_split:
+  cmd: $VAE_PY src/pipeline/test_train_val_split.py
+  deps:
+  - path: data/raw/covid19_subsampled.h5ad
+    md5: 8327ef5f07470c4b72771bce5adc5fc1
+    size: 428636349
+  - path: src/pipeline/test_train_val_split.py
+    md5: eb65ff293bf0fb58c870ba0847f60d51
+    size: 946
+  outs:
+  - path: data/intermediate/covid_test_data.h5ad
+    md5: cfec609f2ced75b83fab86e7d26062c3
+    size: 46284484
+  - path: data/intermediate/covid_train_data.h5ad
+    md5: 5f658531816b042805334e5248dca7ec
+    size: 344165415
+  - path: data/intermediate/covid_val_data.h5ad
+    md5: 3404d3dcae95d8519f202d86570dbf92
+    size: 46229075
+train_vae:
+  cmd: $VAE_PY src/pipeline/train_vae.py
+  deps:
+  - path: data/intermediate/covid_test_data.h5ad
+    md5: cfec609f2ced75b83fab86e7d26062c3
+    size: 46284484
+  - path: data/intermediate/covid_train_data.h5ad
+    md5: 5f658531816b042805334e5248dca7ec
+    size: 344165415
+  - path: src/pipeline/train_vae.py
+    md5: cb3f4661f9a9c0abe969c0ef782b58ed
+    size: 7463
+  params:
+    params.toml:
+      training.batch_size: 256
+      training.latent_dimensions_initial_guess: 32
+      training.newton_temperature: 1
+      training.vae_trainer.max_epochs: 10
+  outs:
+  - path: data/artifacts/vae.pth
+    md5: b1cf824d1f0ceafca3f6399ce314d856
+    size: 8486773
+  - path: data/artifacts/vae.pth.json
+    md5: 93f187aa73f8fd31bdfd5ff0da40523d
+    size: 69
+simulation:
+  cmd: $VAE_PY src/pipeline/simulation.py
+  deps:
+  - path: data/artifacts/vae.pth
+    md5: b1cf824d1f0ceafca3f6399ce314d856
+    size: 8486773
+  - path: data/artifacts/vae.pth.json
+    md5: 93f187aa73f8fd31bdfd5ff0da40523d
+    size: 69
+  - path: data/intermediate/covid_train_data.h5ad
+    md5: 5f658531816b042805334e5248dca7ec
+    size: 344165415
+  - path: src/pipeline/simulation.py
+    md5: 35155c4c2f1e5278f7160a8c4fdbb3fc
+    size: 3943
+  params:
+    params.toml:
+      simulation.minimum_cells_per_class: 100
+  outs:
+  - path: data/artifacts/simulation_gene_expression.pq
+    md5: d9631898b98fe93121368c57245988be
+    size: 189434274
+classifier:
+  cmd: $VAE_PY src/pipeline/classifier.py
+  deps:
+  - path: data/artifacts/simulation_gene_expression.pq
+    md5: d9631898b98fe93121368c57245988be
+    size: 189434274
+  - path: data/intermediate/covid_test_data.h5ad
+    md5: cfec609f2ced75b83fab86e7d26062c3
+    size: 46284484
+  - path: data/intermediate/covid_train_data.h5ad
+    md5: 5f658531816b042805334e5248dca7ec
+    size: 344165415
+  - path: data/intermediate/covid_val_data.h5ad
+    md5: 3404d3dcae95d8519f202d86570dbf92
+    size: 46229075
+  - path: src/pipeline/classifier.py
+    md5: bf5377f89bcd10ee1b53207d900ef86d
+    size: 4331
+  params:
+    params.toml:
+      classifier.n_hidden_layers: 2
+      classifier.training_opts.max_epochs: 10
+  outs:
+  - path: data/artifacts/classifer_w_simulated_data_metrics.json
+    md5: 3352e12194ae292bb0150d49b731b162
+    size: 361
+  - path: data/artifacts/classifer_wout_simulated_data_metrics.json
+    md5: f15f836d0f47953309f8b103533df20e
+    size: 361

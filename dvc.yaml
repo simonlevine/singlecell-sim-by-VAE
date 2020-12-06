@@ -6,13 +6,13 @@ stages:
       - data.subsampling
     deps:
     - src/pipeline/subsample.py
-    - data/raw/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection.h5ad
+    - data/raw/covid19.h5ad
     outs:
-    - data/raw/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection_subsampled.h5ad
+    - data/raw/covid19_subsampled.h5ad
   test_train_val_split:
     cmd: $VAE_PY src/pipeline/test_train_val_split.py
     deps:
-    - data/raw/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection_subsampled.h5ad
+    - data/raw/covid19_subsampled.h5ad
     - src/pipeline/test_train_val_split.py
     outs:
     - data/intermediate/covid_test_data.h5ad
@@ -56,6 +56,7 @@ stages:
     - data/intermediate/covid_test_data.h5ad
     - data/intermediate/covid_train_data.h5ad
     - data/intermediate/covid_val_data.h5ad
+    - data/artifacts/simulation_gene_expression.pq
     outs:
     - data/artifacts/classifer_w_simulated_data_metrics.json
     - data/artifacts/classifer_wout_simulated_data_metrics.json
