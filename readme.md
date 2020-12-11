@@ -23,10 +23,10 @@ python -m venv venv
 Grab the data
 
 ```bash
-make download_data
+source venv/bin/activate && source .envrc && make download_data
 ```
 
 Reproduce
 ```bash
-dvc repro
+source venv/bin/activate && source .envrc && dvc repro
 ```
