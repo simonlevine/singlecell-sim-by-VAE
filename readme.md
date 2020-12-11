@@ -1,4 +1,4 @@
-# 02-{5,7}12 Final Project
+# 02-{5,7}12 Final Project: Simulating Latent Single-Cell Gene Expression of COVID-19 Patients with Variational Autoencoder and Implications for Augmenting Classification Models
 
 ## Abstract
 
