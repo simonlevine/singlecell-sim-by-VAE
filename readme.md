@@ -17,7 +17,7 @@ Install dependencies
 ```bash
 python -m venv venv
 ./venv/bin/pip install -r requirements.txt
-./venv/bin/pip install dvc
+pip install --user dvc
 ```
 
 Grab the data
