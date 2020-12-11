@@ -21,5 +21,10 @@ python -m venv venv
 Grab the data
 
 ```bash
-dvc pull
+make download_data
+```
+
+Reproduce
+```bash
+dvc repro
 ```
